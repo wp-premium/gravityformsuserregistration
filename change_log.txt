@@ -1,0 +1,250 @@
+-----------------------------------------------------------
+Version 1.8
+    - Added more debug statements for logging.
+	- Added logging support and some initial debug statements.
+	- Updated two strings in activate.php to match their equivalents in wp-activate.php (as of WP 1.8.1).
+	- Updated signup activation to check if email address is already in use and return a message indicating such.
+    - Updated all places where RGUserUpgrade class was manually included to use new GFUser::include_upgrade_library() method.
+	- Fixed notice with missing variable $set_post_author.
+    - Fixed issue on single site installs where activation email title and from name defaulted to "WordPress".
+	- Fixed issue on Update form where pre-population didn't always work when a value was set to zero.
+    - Fixed issue where RGUserUpgrade class was called but not included.
+    - Fixed issue where single column list fields were not updating correctly on Update feeds.
+    - Fixed issue where deprecated functions were used in activation process.
+	- Fixed issue in Update feed on multi-site where email address said to already be used.
+
+-----------------------------------------------------------
+Version 1.7
+    - Fixed issue with invalid site domain and path when creating a new site
+    - Fixed issue with email activation link displaying errors when mapping BBPress fields
+	- Fixed issue where $base global variable in wp-config.php may not have the trailing slash, causing the site url created to be bad
+	- Fixed bug where PayPal integration caused user to be registered regardless of being set to manual/email activation
+
+-----------------------------------------------------------
+Version 1.6
+    - Updated automatic upgrade so that it caches remote requests for 12 hours (even on plugin's page)
+    - Updated multisite username and email validation to only apply if the correct page is being validated
+    - Updated to allow mapping to POST fields for Update User feed
+    - Fixed issue with form action on activate.php when invalid activation key provided
+    - Fixed issue with display name not being set correctly on an create feed
+    - Fixed issue were BP on single site installs was overwriting standard user meta fields (ie first name, last name, nicename)
+    - Fixed issue where email validation allowed update feeds to use already used email addresses
+    - Added better support for file uploads on forms with update feeds
+    - Fixed issue where multisite validation on Update feeds generated error when using existing email
+
+-----------------------------------------------------------
+Version 1.5
+    - Added support for custom registration page for multi-site installs
+    - Fixed link location for drop down on Pending Activations page which takes user to view All pending or form-specific pending
+    - Fixed issue where All pending activations was returning no records
+    - Fixed issue where usernames with spaces were not displaying in pending activation table
+    - Added "back to list" link on successful activation on Pending Activations page
+    - Updated Pending Activations table to only show form column when viewing All Pending Activations
+    - Updated UI to remove tabs
+    - Fixed issue where update_user() function was not correctly saving the user's email
+    - Fixed errors when populating an update fields with values containing single quotes
+    - Added support for specifying user activation type (manual, by email)
+    - Updated roles drop down on feed page to order by a custom sort (subscriber first)
+    - Fixed issue when updating user's website meta on an update feed
+    - Fixed issue with mapping category fields to BuddyPress
+    - Fixed error on update feed form when Buddy Press is uninstalled
+    - Fixed issue with checkboxes not being saved correctly when unchecked from an update feed
+    - Fixed issue with date fields not being formatted correctly when populating fields in an update feed
+    - Fixed issue with plugin-upgrade.php where failed remote response generated several notices
+    - Added support for saving processed config in entry meta and retrieving this from get_active_config() function
+    - Fixed issue where multiple file upload fields were not be populated correctly (powered by update feed)
+    - BP functions bound to gform_user_registered were not being bound in the admin as the gform_user_registered hook was not previously fired in the admin (now fires when manually activating a pending activation)
+    - Fixed issue where "wp_" prefix was being used instead of "$wpdb->prefix" Busted!
+    - refactored form population for update feeds
+    - added support for list fields for update feeds
+    - fixed issue with date field population for update feeds
+    - Fixed issue with hardcoded table prefix
+    - Fixed issue with AJAX call when admin is configured to force SSL
+    - Fixed issue where Gravity Forms was being required and failing to find plugin
+    - Fixed issue where values being populated back into form for update feeds were not escaping single quotes which caused errors
+    - Fixed issue where unescaped single quotes were causing issues on feed editor
+    - Fixed issue where custom meta fields with 0 as a value weren't saving to the database
+    - Fixed notices when form inputs array doesn't exist which caused AJAX spinner to remain and no form fields were displayed
+    - fixed compatability issue with BP 1.6 where BP profile function is no longer available
+    - added "gform_disable_registration" hook to allow add-ons to prevent User Registration from registering/updating a user
+    - fixed issue where using wp_get_current_user() function was failing to update users when wait for payment option was checked
+    - fixed issue where "Pending Activations" link displayed in feed actions for Update feeds
+    - fixed issue where "Send Email?" option was displaying for Update feeds
+    - fixed issue where "Preserve current role" option was not preserving user's role for new feeds
+    - fixed issue were active status was not taken into account when retrieving update feed
+    - Fixed issue where new feed options were not displaying immediately
+    - Added support for displaying all user meta keys in feed meta key drop downs
+    - Fixed UI to read "Action" instead of "Feed Type"
+    - Added pending activation link to entry detail page
+    - Added support for multiple feeds per form
+    - Added support for user activation on a per feed basis
+    - Added support for "update" feed types
+    - Added new conditional logic options (greater than, less than, contains starts with, ends with) and support for other conditional fields
+    - Fixed notices
+
+-----------------------------------------------------------
+Version 1.4
+    - Fixed typo
+    - Fixed issue where users were not visible in the BP member directory
+    - Added support for displaying user registration notice in activity feed
+
+-----------------------------------------------------------
+Version 1.3
+    - Fixed issue when Authorize.net and PayPal feeds were configured on the same form. The PayPal feed was being used sometimes even though the PayPal condition wasn't met
+    - Fixed issue where inactive feeds were still being processed
+    - Added several additional parameters to the "gform_username" hook
+    - Fixed issue where translation files were only being loaded for admin
+    - Fixed several notices with BuddyPress integration
+    - Updated function for adding user properties to prevent removal of password
+    - Added "gform_site_created" hook which triggers after a site has been created
+        Documentation: http://www.gravityhelp.com/documentation/page/Gform_site_created
+    - Updated functionality to add website user property correctly
+    - Updated PayPal integration to support multiple PayPal feeds with the same form
+	- Fixed notices on the PayPal Transaction Settings for the User Registration section
+    - Fixed issue where RG_CURRENT_PAGE constant was not available when GF is deactivated
+    - Added option to feed to allow user to specify the display name of the created user
+    - Updated code in various places to be cleaner and more effecient
+    - Added option to select role of new user on new site
+    - Added option to select role of new user on existing site
+    - Updated the "Custom Registration Page" functionality to also override BP Register page
+    - Fixed several PHP notices
+    - Fixed issue where validation was being processed regardless of a registration condition
+    - Fixed issue where $entry object was not being passed when checking if registration condition was met
+    - Fixed issue where GF was calling "gform_post_submission" hook prior to add-on tying function to it
+
+-----------------------------------------------------------
+Version 1.2.11
+    - Fixed issue where password was not included on New Site Creation email.
+
+-----------------------------------------------------------
+Version 1.2.10
+    - Updated registration_met() function to retrieve submitted value from the lead (rather than $_POST) to be compatible with PayPal Add-on
+
+-----------------------------------------------------------
+Version 1.2.9
+    - Fixed issue where empty array values for checkboxes and multiselect fields were being displayed as part of the BP profile data
+
+-----------------------------------------------------------
+Version 1.2.8
+    - Fixed issue where erroneous fields with empty inputs array were not displaying in feed fields drop down
+
+-----------------------------------------------------------
+Version 1.2.7
+    - Updated custom_registration_page() function to no longer user parse_url() php function
+
+-----------------------------------------------------------
+Version 1.2.6.3
+    - Users are not created if entry is marked as spam
+    - Marking an entry as not spam will create the user
+
+-----------------------------------------------------------
+Version 1.2.6.2
+    - Updated how the BuddyPress profile data table name is retrieved
+    - Updated custom_registration_page() function to parse more complex URLs
+
+-----------------------------------------------------------
+Version 1.2.6.1
+    - Updated "Custom Registration Page" functionality; when activated, accessing WP's default registration page will redirect user to specified page
+
+-----------------------------------------------------------
+Version 1.2.6
+    - Updated all localization strings to ensure same domain
+    - Recreated localization POT file
+    - Updated validation to validate regardless if the registration condition is met
+
+-----------------------------------------------------------
+Version 1.2.5
+    - Added cleanup routine to make sure user meta values are not stored as arrays
+
+-----------------------------------------------------------
+Version 1.2.4
+    - Added new filter "gform_username" to dynamically assign a username
+
+    add_filter('gform_username', 'auto_username');
+    function auto_username($username){
+        $username = rgpost('input_2_3') . rgpost('input_2_6');
+        return $username;
+    }
+
+-----------------------------------------------------------
+Version 1.2.3
+    - Escaped javascript localization strings
+
+-----------------------------------------------------------
+Version 1.2.2
+    - Add new option/functionality to override WP's default registration page with a custom page
+    - Require BP file in get_buddypress_fields() for users who have BP active but not setup
+
+-----------------------------------------------------------
+Version 1.2.1
+    - Updated 'Email Address' field dropdown to also pull custom fields that are set to the Email input type
+    - Updated is_root_site() function to more reliably determine if the current blog is the root site's blog
+    - Fixed several notices on User Registration multisite options
+
+-----------------------------------------------------------
+Version 1.2
+    - Fixed issue with localization
+    - Updated UI to support longer translation verbiage
+
+-----------------------------------------------------------
+Version 1.1
+    - Fixed issue where all User Registration options were displaying for PayPal Feeds even when no User Registration Feed existed for the selected form
+    - Fixed issue where User Registration options were not available on a PayPal Feed until after saving the PayPal Feed was saved.
+    - Feed password field now defaults to a form password field (if available)
+
+-----------------------------------------------------------
+Version 1.0
+    - Updated version to 1.0
+
+-----------------------------------------------------------
+Version 1.0.beta5.3
+    - Updated reference to "gforms_paypal_save_config" to use the renamed hook: "gform_paypal_save_config"
+    - Localized add-on
+    - Added gravityformsuserregistration.pot file
+
+-----------------------------------------------------------
+Version 1.0.beta5.2
+    - Added hook to allow User Registration validation messages to be updated
+        Example:
+        add_filter("gform_user_registration_validation_message", "update_validation_msgs", 10, 2);
+
+        function update_validation_msgs($message, $form){
+
+            if($message == 'This username is already registered')
+                $message = 'We\'re sorry, this username is already registered. Try submitting with a different username.';
+
+            return $message;
+        }
+
+-----------------------------------------------------------
+Version 1.0.beta5.1
+    - Updated gf_create_user() code to abort user registration if username already exists; beneficial to prevent existing user data being overwritten if username validation is overriden
+
+-----------------------------------------------------------
+Version 1.0.beta5
+    - Added support for all BP field types
+    - Rewrote function to better retrieve values from the $_POST and $entry object
+
+-----------------------------------------------------------
+Version 1.0.beta4
+    - fixed validation issue for multi-page forms where the site address MU registration field was being validated regardless of current page
+    - fixed "Cancel" button on Edit page to return the user to the List page
+    - update multisite registration validation to check if site name (domain) already exists
+
+-----------------------------------------------------------
+Version 1.0.beta3.2
+    - fixed IE issue where selecting a form on the PayPal addon was generating an error when no User Registration feeds existed
+
+-----------------------------------------------------------
+Version 1.0.beta3
+    - added support for creating MultiSite with user registration
+    - fixed issue where MultiSite was failing to return validation error for spaces in domain name
+    - disabled MultiSite options on User Resgistration feed view for child sites
+
+-----------------------------------------------------------
+Version 1.0.beta2
+
+-----------------------------------------------------------
+Version 1.0.beta1
+    - updated database name to be consistent with other Gravity Form Add-Ons
+    - updated permission required to view User Registration menu
