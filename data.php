@@ -210,6 +210,7 @@ class GFUserData{
         
         foreach($bp_rows as $bp_row) {
             $success = xprofile_set_field_data($bp_row['field_id'], $bp_row['user_id'], $bp_row['value']);
+	        xprofile_set_field_visibility_level( $bp_row['field_id'], $bp_row['user_id'], $bp_row['field']->default_visibility );
         }
         
     }
