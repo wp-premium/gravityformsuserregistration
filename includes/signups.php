@@ -3,29 +3,58 @@
 class GFUserSignups {
 
     public static function create_signups_table() {
-        require_once(ABSPATH . "wp-admin/includes/upgrade.php");
-
-        global $wpdb, $charset_collate;
+        global $wpdb;
 
         self::add_signups_to_wpdb();
 
-        $ms_queries = "CREATE TABLE $wpdb->signups (
-                domain varchar(200) NOT NULL default '',
-                path varchar(100) NOT NULL default '',
-                title longtext NOT NULL,
-                user_login varchar(60) NOT NULL default '',
-                user_email varchar(100) NOT NULL default '',
-                registered datetime NOT NULL default '0000-00-00 00:00:00',
-                activated datetime NOT NULL default '0000-00-00 00:00:00',
-                active tinyint(1) NOT NULL default '0',
-                activation_key varchar(50) NOT NULL default '',
-                meta longtext,
-                KEY activation_key (activation_key),
-                KEY domain (domain)
-                ) $charset_collate;";
+        $table_exists  = (bool) $wpdb->get_results( "DESCRIBE {$wpdb->signups};" );
 
-        // now create table
-        dbDelta($ms_queries);
+        // Upgrade verions prior to 3.7
+        if ( $table_exists ) {
+
+            $column_exists = $wpdb->query( "SHOW COLUMNS FROM {$wpdb->signups} LIKE 'signup_id'" );
+
+            if( empty( $column_exists ) ) {
+
+                // New primary key for signups.
+                $wpdb->query( "ALTER TABLE $wpdb->signups ADD signup_id BIGINT(20) NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST" );
+                $wpdb->query( "ALTER TABLE $wpdb->signups DROP INDEX domain" );
+
+            }
+
+        }
+
+        self::install_signups();
+
+    }
+
+    private static function install_signups() {
+        global $wpdb;
+
+        // Signups is not there and we need it so let's create it
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+
+        // Use WP's core CREATE TABLE query
+        $create_queries = wp_get_db_schema( 'ms_global' );
+        if ( ! is_array( $create_queries ) ) {
+            $create_queries = explode( ';', $create_queries );
+            $create_queries = array_filter( $create_queries );
+        }
+
+        // Filter out all the queries except wp_signups
+        foreach ( $create_queries as $key => $query ) {
+            if ( preg_match( "|CREATE TABLE ([^ ]*)|", $query, $matches ) ) {
+                if ( trim( $matches[1], '`' ) !== $wpdb->signups ) {
+                    unset( $create_queries[ $key ] );
+                }
+            }
+        }
+
+        // Run WordPress's database upgrader
+        if ( ! empty( $create_queries ) ) {
+            dbDelta( $create_queries );
+        }
+
     }
 
     /**
@@ -33,7 +62,7 @@ class GFUserSignups {
     */
     private static function add_signups_to_wpdb() {
         global $wpdb;
-        $wpdb->signups = $wpdb->prefix . 'signups';
+        $wpdb->signups = $wpdb->base_prefix . 'signups';
     }
 
     public static function prep_signups_functionality() {
@@ -55,6 +84,10 @@ class GFUserSignups {
         add_filter( 'wpmu_signup_user_notification_email', array( 'GFUserSignups', 'modify_signup_user_notification_message' ), 10, 4 );
         add_filter( 'wpmu_signup_blog_notification_email', array( 'GFUserSignups', 'modify_signup_blog_notification_message' ), 10, 7 );
 
+        // disable activation email for manual activation feeds
+        add_filter( 'wpmu_signup_user_notification', array( 'GFUserSignups', 'maybe_suppress_signup_user_notification' ), 10, 3 );
+        add_filter( 'wpmu_signup_blog_notification', array( 'GFUserSignups', 'maybe_suppress_signup_blog_notification' ), 10, 6 );
+
         add_filter( 'wpmu_signup_user_notification', array( __class__, 'add_site_name_filter' ) );
         add_filter( 'wpmu_signup_user_notification_subject', array( __class__, 'remove_site_name_filter' ) );
 
@@ -66,12 +99,23 @@ class GFUserSignups {
 
     }
 
+    public static function maybe_suppress_signup_user_notification( $user, $user_email, $key ) {
+        return self::is_manual_activation( $key ) ? false : $user;
+    }
+
+    public function maybe_suppress_signup_blog_notification( $domain, $path, $title, $user, $user_email, $key ) {
+        return self::is_manual_activation( $key ) ? false : $user;
+    }
+
+    public static function is_manual_activation( $key ) {
+        $signup = GFSignup::get( $key );
+        return ! is_wp_error( $signup ) && $signup->get_activation_type() == 'manual';
+    }
+
     public static function modify_signup_user_notification_message($message, $user, $user_email, $key) {
 
-        $signup = GFSignup::get( $key );
-
-        // if no signup or config is set for manual activation, return false preventing signup notification from being sent to user
-        if( is_wp_error( $signup ) || $signup->get_activation_type() == 'manual' )
+        // don't send activation email for manual activations
+        if( self::is_manual_activation( $key ) )
             return false;
 
         $url = add_query_arg(array('page' => 'gf_activation', 'key' => $key), get_site_url() . '/' );
@@ -87,10 +131,8 @@ class GFUserSignups {
 
     public static function modify_signup_blog_notification_message($message, $domain, $path, $title, $user, $user_email, $key) {
 
-        $signup = GFSignup::get( $key );
-
-        // if no signup or config is set for manual activation, return false preventing signup notification from being sent to user
-        if( is_wp_error( $signup ) || $signup->get_activation_type() == 'manual' )
+        // don't send activation email for manual activations
+        if( self::is_manual_activation( $key ) )
             return false;
 
         $url = add_query_arg(array('page' => 'gf_activation', 'key' => $key), get_site_url());
@@ -158,8 +200,9 @@ class GFUserSignups {
         // unbind site creation from gform_user_registered hook, run it manually below
         if(is_multisite())
             remove_action( 'gform_user_registered' , array( 'GFUser', 'create_new_multisite' ) );
-        
-        $user_data = GFUser::create_user( $signup->lead, $signup->form, $signup->config);
+
+		GFUser::log_debug("Activating signup for username: {$signup->user_login} - entry: {$signup->lead["id"]}" );
+        $user_data = GFUser::create_user( $signup->lead, $signup->form, $signup->config, GFUser::decrypt( $signup->meta['password'] ) );
         $user_id = rgar($user_data, 'user_id');
 
         if(!$user_id){

@@ -1,4 +1,44 @@
 -----------------------------------------------------------
+Version 2.0
+	- Added support for updating file upload fields mapped to BuddyPress image fields (available via BP add-on).
+	- Added additional logging statements.
+	- Updated pending activation so that it doesn't rely on the password being in the entry.
+	- Updated POT file.
+	- Updated plugin updated method so that it takes advantage of proxy manager to get around the blacklisted IP issue.
+    - Fixed issue where pending activations were not sorted correctly.
+	- Fixed update feeds in Gravity Forms 1.9.
+	- Fixed issue where BuddyPress field visibility was ignored.
+	- Fixed warning message on plugin's page.
+	- Fixed notice when 'create_site' feed meta was not set.
+    - Fixed issue where "Simple" type Name fields did not map to user meta correctly.
+    - Fixed issue where data pulled from BuddyPress was not always correctly matched since the HTML entities were already encoded.
+    - Fixed issue whith PayPal integration where users were not getting created when payment was manually being marked as Approved on the entry detail page.
+    - Fixed notice thrown when updating BuddyPress Last Activity meta; updated to use new version.
+	- Fixed issue where the upgrade class wasn't included which caused ManageWP to not work with add-on.
+	- Fixed notices thrown in the downgrade_paypal_user function.
+
+-----------------------------------------------------------
+Version 1.9
+ 	- Added 'gform_user_registration_new_site_meta' filter for filtering the meta used to create a new site
+        add_filter( 'gform_user_registration_new_site_meta', 'add_blog_template', 10, 6 );
+        function add_blog_template( $site_meta, $form, $entry, $feed, $user_id, $is_update_feed ) {
+            $signup_meta['blog_template'] = 1;
+            return $signup_meta;
+        }
+    - Added "Preserve current role" option for "Current Site Role" setting
+    - Added 'gform_user_registration_signup_meta' filter for filtering the signup meta
+        add_filter( 'gform_user_registration_signup_meta', 'add_blog_template', 10, 4 );
+        function add_blog_template( $signup_meta, $form, $entry, $feed ) {
+            $signup_meta['blog_template'] = 1;
+            return $signup_meta;
+        }
+    - Added current user object to wpmu_validate_blog_signup() call to allow registering sites with the same name as the current user
+	- Fixed the functions used by the mwp_premium_update_notification and mwp_premium_perform_update hooks so that the new_version element in the array returns the add-on's version instead of Gravity Forms'
+    - Fixed issue where signups table on single site installs failed to update correctly when promoting site to multisite
+    - Fixed issue where activation emails were sent even though manual activation was enabled
+    - Fixed strict notice for Non-static method GFUserSignups::install_signups()
+
+-----------------------------------------------------------
 Version 1.8
     - Added more debug statements for logging.
 	- Added logging support and some initial debug statements.

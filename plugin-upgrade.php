@@ -91,8 +91,14 @@ class RGUserUpgrade{
                 'User-Agent' => 'WordPress/' . get_bloginfo("version"),
                 'Referer' => get_bloginfo("url")
             );
-            $url = GRAVITY_MANAGER_URL . "/version.php?" . self::get_remote_request_params($offering, $key, $version);
-            $raw_response = wp_remote_request($url, $options);
+
+			if ( method_exists( 'GFCommon', 'post_to_manager'  ) ){
+				$raw_response = GFCommon::post_to_manager("version.php", self::get_remote_request_params($offering, $key, $version), $options);
+			}
+			else{
+	            $url = GRAVITY_MANAGER_URL . "/version.php?" . self::get_remote_request_params($offering, $key, $version);
+    	        $raw_response = wp_remote_request($url, $options);
+			}
 
             if ( is_wp_error( $raw_response ) || 200 != $raw_response['response']['code']){
                 $version_info = -1;

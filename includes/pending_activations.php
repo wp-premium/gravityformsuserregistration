@@ -123,7 +123,7 @@ class GFUserPendingActiviations {
         $where[] = "s.active = 0";
         $where = 'WHERE ' . implode(' AND ', $where);
         
-        $order = $wpdb->prepare("ORDER BY %s %s", $order_by, $order);
+        $order = "ORDER BY {$order_by} {$order}";
         $offset = ($page * $per_page) - $per_page;
         $limit_offset = $get_total ? '' : "LIMIT $per_page OFFSET $offset";
         $method = $get_total ? 'get_var' : 'get_results';
