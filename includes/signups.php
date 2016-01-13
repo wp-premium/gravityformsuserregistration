@@ -103,7 +103,7 @@ class GFUserSignups {
         return self::is_manual_activation( $key ) ? false : $user;
     }
 
-    public function maybe_suppress_signup_blog_notification( $domain, $path, $title, $user, $user_email, $key ) {
+    public static function maybe_suppress_signup_blog_notification( $domain, $path, $title, $user, $user_email, $key ) {
         return self::is_manual_activation( $key ) ? false : $user;
     }
 
@@ -122,11 +122,11 @@ class GFUserSignups {
 
         // BP replaces URL before passing the message, get the BP activation URL and replace
         if( GFUser::is_bp_active() ) {
-            $activate_url = esc_url(bp_get_activation_page() . "?key=$key");
+            $activate_url = esc_url_raw(bp_get_activation_page() . "?key=$key");
             $message = str_replace($activate_url, '%s', $message);
         }
 
-        return sprintf($message, $url);
+        return sprintf($message, esc_url_raw($url));
     }
 
     public static function modify_signup_blog_notification_message($message, $domain, $path, $title, $user, $user_email, $key) {
@@ -139,11 +139,11 @@ class GFUserSignups {
 
         // BP replaces URL before passing the message, get the BP activation URL and replace
         if(GFUser::is_bp_active()) {
-            $activate_url = esc_url(bp_get_activation_page() . "?key=$key");
+            $activate_url = esc_url_raw(bp_get_activation_page() . "?key=$key");
             $message = str_replace($activate_url, '%s', $message);
         }
 
-        return sprintf($message, $url, esc_url("http://{$domain}{$path}"), $key);
+        return sprintf($message, esc_url_raw($url), esc_url_raw("http://{$domain}{$path}"), $key);
     }
 
     public static function add_site_name_filter( $return ) {
@@ -215,8 +215,9 @@ class GFUserSignups {
 
         if(is_multisite()) {
             $ms_options = rgars( $signup->config, 'meta/multisite_options');
-            if($ms_options['create_site'])
+            if( rgar( $ms_options, 'create_site' ) ){
                 $blog_id = GFUser::create_new_multisite($user_id, $signup->config, $signup->lead, $user_data['password']);
+			}
         }
 
         return array('user_id' => $user_id, 'password' => $user_data['password'], 'blog_id' => $blog_id);

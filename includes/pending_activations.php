@@ -231,6 +231,10 @@ class GFUserPendingActivationsList extends WP_List_Table {
         
     }
     
+	function get_columns() {
+		return $this->_column_headers[0];
+	}
+    
     function prepare_items() {
         
         $items = array();

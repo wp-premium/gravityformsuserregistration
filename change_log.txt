@@ -1,4 +1,65 @@
 -----------------------------------------------------------
+Version 2.4
+    - Added some logging statements to prepare_buddypress_data().
+    - Added the 'gform_userregistration_enable_multisite_section' filter allowing the user to force activation of multisite section of feed settings network-wide.
+        add_filter('gform_user_registration_enable_multisite_section', '__return_true');
+    - Added the 'gform_user_registration_feed_conditional_logic' filter enabling the feed conditional logic rule to be overridden during submission, allowing multiple rules to be defined.
+        add_filter( 'gform_user_registration_feed_conditional_logic', function( $logic, $form, $config ) {
+            $logic['rules'][] = array(
+                'fieldId'  => '5',
+                'operator' => 'is',
+                'value'    => 'Register',
+            );
+
+            return $logic;
+        }, 10, 3 );
+    - Fixed an issue with username and email validation not taking pending activations into account.
+    - Fixed an issue with the activation URL sent by email.
+    - Fixed a PHP notice related to the blog signup notification message.
+    - Fixed a PHP notice caused by a typo in the third parameter of the gform_user_registration_user_data_pre_populate filter.
+    - Fixed an issue with the processing of user meta where the field has been hidden by conditional logic.
+    - Fixed typo in gform_user_registration_enable_multisite_section filter name. 
+    - Fixed db table error on feed list page due to the table not being created.
+    - Fixed WP_List_Tables error in WordPress 4.3 for pending activations.
+
+-----------------------------------------------------------
+Version 2.3
+    - Added extra checking to avoid custom registration page redirection when using Create a New Site from My Sites screen.
+    - Added filter: gform_user_registration_user_data_pre_populate; allows filtering the user data prior to being populated when an Update feed is attached
+        add_filter( 'gform_user_registration_user_data_pre_populate', function( $user_data, $form, $feed ) {
+            // replace "12" with the field ID you want to replace
+            $user_data[12] = 'My Custom Value';
+            return $user_data;
+        }, 10, 3 );
+    - Fixed an issue with the activation URL sent by email.
+
+-----------------------------------------------------------
+Version 2.2
+	- Fixed a low severity security vulnerability in the admin area which could be exploited by authenticated users with form administration permissions.
+	- Fixed issue where user wasn't created when form was submitted from the dashboard.
+
+-----------------------------------------------------------
+Version 2.1
+    - Added "gform_user_registration_prepared_value" filter for modifying the prepared value returned by the GFUser::get_prepared_value() method
+        add_filter( 'gform_user_registration_prepared_value', function( $value, $field, $input_id, $entry, $is_username ) {
+            return strtoupper( $value );
+        }, 10, 5 );
+	- Added Spanish translation (es_ES).
+    - Removed call to deprecated get_dashboard_blog() function
+    - Updated POT file.
+    - Fixed an issue with the way multi-input Email, Password, Date and Time fields are listed in field mapping drop downs when configuring a feed with GF 1.9.
+	- Fixed issue with PayPal integration on feeds with a condition.
+    - Fixed issue where feed could not be loaded if any multi-choice field had an integer value
+	- Fixed issue with multi-input Date fields displaying as three separate inputs rather than a single input (related to changes in GF 1.9)
+	- Fixed an issue with password validation on passwords containing a backslash ( \ ).
+    - Fixed an issue with pre-populating fields related to how Gravity Forms 1.9 handles inputs for fields such Email, Date and Time.
+	- Fixed issue with passwords containing single quotes.
+	- Fixed issue with password field map on delayed payment feeds.
+	- Fixed notice.
+    - Fixed issue where date fields were not mapped correctly in newer versions of BuddyPress
+	- Fixed typo in a translation string in userregistration.php
+
+-----------------------------------------------------------
 Version 2.0
 	- Added support for updating file upload fields mapped to BuddyPress image fields (available via BP add-on).
 	- Added additional logging statements.
