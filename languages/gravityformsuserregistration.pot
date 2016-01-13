@@ -2,9 +2,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gravity Forms User Registration\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-22 13:52-0500\n"
-"PO-Revision-Date: 2014-10-22 13:54-0500\n"
-"Last-Translator: Dana Cobb <dana@rocketgenius.com>\n"
+"POT-Creation-Date: 2014-11-13 12:28+0100\n"
+"PO-Revision-Date: 2014-11-13 12:28+0100\n"
+"Last-Translator: Samuel Aguilera <correo@samuelaguilera.com>\n"
 "Language-Team: Rocketgenius <customerservice@rocketgenius.com>\n"
 "Language: en_US\n"
 "MIME-Version: 1.0\n"
@@ -121,7 +121,7 @@ msgid "Activate"
 msgstr ""
 
 #: ../includes/pending_activations.php:310 ../userregistration.php:392
-#: ../userregistration.php:440 ../userregistration.php:2947
+#: ../userregistration.php:440 ../userregistration.php:2961
 msgid "Delete"
 msgstr ""
 
@@ -129,19 +129,19 @@ msgstr ""
 msgid "That username is already activated."
 msgstr ""
 
-#: ../includes/signups.php:197 ../userregistration.php:2640
+#: ../includes/signups.php:197 ../userregistration.php:2654
 msgid "Sorry, that email address is already used!"
 msgstr ""
 
-#: ../includes/signups.php:208
+#: ../includes/signups.php:209
 msgid "Could not create user"
 msgstr ""
 
-#: ../includes/signups.php:264
+#: ../includes/signups.php:265
 msgid "Invalid activation key."
 msgstr ""
 
-#: ../includes/signups.php:267
+#: ../includes/signups.php:268
 msgid "The user is already active."
 msgstr ""
 
@@ -172,7 +172,7 @@ msgid ""
 msgstr ""
 
 #: ../userregistration.php:273 ../userregistration.php:316
-#: ../userregistration.php:2908
+#: ../userregistration.php:2922
 msgid "User Registration"
 msgstr ""
 
@@ -572,11 +572,11 @@ msgstr ""
 
 #: ../userregistration.php:1080
 msgid ""
-"This field does not have any <strong>Email</strong> fields. Please add an "
+"This form does not have any <strong>Email</strong> fields. Please add an "
 "Email field and try again."
 msgstr ""
 
-#: ../userregistration.php:1114 ../userregistration.php:3361
+#: ../userregistration.php:1114 ../userregistration.php:3375
 msgid "&mdash; Preserve current role &mdash;"
 msgstr ""
 
@@ -624,104 +624,104 @@ msgstr ""
 msgid "Create new site when a user registers."
 msgstr ""
 
-#: ../userregistration.php:2615
+#: ../userregistration.php:2629
 msgid "Passwords may not contain the character \"\\\""
 msgstr ""
 
-#: ../userregistration.php:2644
+#: ../userregistration.php:2658
 msgid ""
 "That email address has already been used. Please check your inbox for an "
 "activation email. It will become available in a couple of days if you do "
 "nothing."
 msgstr ""
 
-#: ../userregistration.php:2685 ../userregistration.php:2687
+#: ../userregistration.php:2699 ../userregistration.php:2701
 msgid "This email address is already registered"
 msgstr ""
 
-#: ../userregistration.php:2691
+#: ../userregistration.php:2705
 msgid "The email address can not be empty"
 msgstr ""
 
-#: ../userregistration.php:2699
+#: ../userregistration.php:2713
 msgid "This username is already registered"
 msgstr ""
 
-#: ../userregistration.php:2702
+#: ../userregistration.php:2716
 msgid ""
 "The username can only contain alphanumeric characters (A-Z, 0-9), "
 "underscores, dashes and spaces"
 msgstr ""
 
-#: ../userregistration.php:2705
+#: ../userregistration.php:2719
 msgid ""
 "The username can only contain alphanumeric characters (A-Z, 0-9), "
 "underscores and dashes"
 msgstr ""
 
-#: ../userregistration.php:2708
+#: ../userregistration.php:2722
 msgid "The username can not be empty"
 msgstr ""
 
-#: ../userregistration.php:2919
+#: ../userregistration.php:2933
 msgid "Register user only when a payment is received."
 msgstr ""
 
-#: ../userregistration.php:2921
+#: ../userregistration.php:2935
 msgid "Register user and create site only when a payment is received."
 msgstr ""
 
-#: ../userregistration.php:2929
+#: ../userregistration.php:2943
 msgid "Update <strong>user</strong> when subscription is cancelled."
-msgstr ""
-
-#: ../userregistration.php:2935
-#, php-format
-msgid "Set User as %s"
-msgstr ""
-
-#: ../userregistration.php:2944
-msgid "Update <strong>site</strong> when subscription is cancelled."
-msgstr ""
-
-#: ../userregistration.php:2947
-msgid "Deactivate"
 msgstr ""
 
 #: ../userregistration.php:2949
 #, php-format
+msgid "Set User as %s"
+msgstr ""
+
+#: ../userregistration.php:2958
+msgid "Update <strong>site</strong> when subscription is cancelled."
+msgstr ""
+
+#: ../userregistration.php:2961
+msgid "Deactivate"
+msgstr ""
+
+#: ../userregistration.php:2963
+#, php-format
 msgid "%s site"
 msgstr ""
 
-#: ../userregistration.php:3096
+#: ../userregistration.php:3110
 msgid ""
 "You don't have adequate permission to uninstall the User Registration Add-On."
 msgstr ""
 
-#: ../userregistration.php:3147 ../userregistration.php:3207
+#: ../userregistration.php:3161 ../userregistration.php:3221
 msgid "Full"
 msgstr ""
 
-#: ../userregistration.php:3368
+#: ../userregistration.php:3382
 msgid "&mdash; No role for this site &mdash;"
 msgstr ""
 
-#: ../userregistration.php:3706
+#: ../userregistration.php:3722
 msgid "Oops! You need to be logged in to use this form."
 msgstr ""
 
-#: ../userregistration.php:3745
+#: ../userregistration.php:3761
 msgid "Select a form"
 msgstr ""
 
-#: ../userregistration.php:3784
+#: ../userregistration.php:3800
 msgid "Pending Activation:"
 msgstr ""
 
-#: ../userregistration.php:3792
+#: ../userregistration.php:3808
 msgid "Are you sure you want to activate this user?"
 msgstr ""
 
-#: ../userregistration.php:3812
+#: ../userregistration.php:3828
 msgid "User Activated Successfully"
 msgstr ""
