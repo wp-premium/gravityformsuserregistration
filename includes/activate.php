@@ -5,7 +5,7 @@ define( 'WP_INSTALLING', true );
 global $current_site;
 
 // include GF User Registration functionality
-require_once(GFUser::get_base_path() . '/includes/signups.php');
+require_once( gf_user_registration()->get_base_path() . '/includes/signups.php' );
 
 GFUserSignups::prep_signups_functionality();
 
