@@ -1,4 +1,38 @@
 -----------------------------------------------------------
+Version 3.2.1
+    - Fixed fatal error when using "user" shortcode in list output mode and meta value is not an array.
+
+-----------------------------------------------------------
+Version 3.2
+    - Added Chinese (China, Hong Kong, and Taiwan) translations. Credit: Jason Hoi.
+    - Added feed settings option to send user email when site is created.
+    - Added "gform_user_registration_login_args" filter to modify all login form arguments.
+    - Added "gform_user_registration_login_form_title" filter to modify login form title.
+    - Added "gform_user_registration_login_form_description" filter to modify login form description.
+    - Added "gform_user_registration_login_redirect_url" filter to modify redirect url after success login.
+    - Added "Nickname" option to User Settings feed settings.
+    - Added notification events: Site is created, User activation, User is activated, User is registered, User is updated
+    - Added "Preserve existing Display Name" option to update user feeds.
+    - Added support for feed duplication.
+    - Added support for using a custom link as the custom registration page.
+    - Added user login via widget.
+    - Added "user" action to Gravity Forms shortcode to retrieve user object and meta data. (e.g. [gravityform action="user" key="display_name"])
+    - Added "Username" field to Advanced Fields.
+    - Added additional logging statements.
+    - Added support for the {activation_url} merge tag.
+    - Fixed a fatal error which could occur on the pending activations page when attempting to display the activation error message.
+    - Fixed an issue pre-populating the List field when processing the update feed on form render.
+    - Fixed an issue where the post author was not set when the entry was marked as not spam.
+    - Fixed an issue which could prevent user activation for users created by the pre-framework version if conditional logic is configured on the feeds.
+    - Fixed an issue with BuddyPress overriding the activation emails which prevented the add-on handling user creation when the activation link was used.
+    - Fixed an issue with the entry id stored in the user meta being overridden when an update feed is processed.
+    - Fixed an issue with the post author not being set.
+    - Updated feed action feed settings field to use visual radio buttons.
+    - Updated feed settings for PayPal Standard to only display once the transaction type is selected and to only display the update user and site settings when the subscription type is selected.
+    - Updated user role feed settings field to be a required field.
+    - Updated wp_new_user_notification() to support logging the result from wp_mail().
+
+-----------------------------------------------------------
 Version 3.1
     - Updated processing of post category field value to use object notation.
     - Updated logging around processing of user meta.
