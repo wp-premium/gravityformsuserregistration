@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms User Registration Add-On
 Plugin URI: http://www.gravityforms.com
 Description: Allows WordPress users to be automatically created upon submitting a Gravity Form
-Version: 3.1
+Version: 3.2.1
 Author: rocketgenius
 Author URI: http://www.rocketgenius.com
 Text Domain: gravityformsuserregistration
@@ -27,7 +27,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-define( 'GF_USER_REGISTRATION_VERSION', '3.1' );
+define( 'GF_USER_REGISTRATION_VERSION', '3.2.1' );
 
 add_action( 'gform_loaded', array( 'GF_User_Registration_Bootstrap', 'load' ), 5 );
 
@@ -40,7 +40,7 @@ class GF_User_Registration_Bootstrap {
 		}
 
 		require_once( 'class-gf-user-registration.php' );
-
+		require_once( 'includes/class-gf-login-widget.php' );
 
 		GFAddOn::register( 'GF_User_Registration' );
 
@@ -50,6 +50,10 @@ class GF_User_Registration_Bootstrap {
 
 function gf_user_registration() {
 	return GF_User_Registration::get_instance();
+}
+
+function gf_user_registration_login_form() {
+	return gf_user_registration()->get_login_html();
 }
 
 if ( ! function_exists( 'wp_new_user_notification' ) ) {
@@ -67,7 +71,8 @@ if ( ! function_exists( 'wp_new_user_notification' ) ) {
 		$message .= sprintf( __( 'Username: %s' ), $user->user_login ) . "\r\n\r\n";
 		$message .= sprintf( __( 'Email: %s' ), $user->user_email ) . "\r\n";
 
-		@wp_mail( get_option( 'admin_email' ), sprintf( __( '[%s] New User Registration' ), $blogname ), $message );
+		$result = @wp_mail( get_option( 'admin_email' ), sprintf( __( '[%s] New User Registration' ), $blogname ), $message );
+		gf_user_registration()->log_wp_mail( $result, 'admin' );
 
 		if ( 'admin' === $notify || ( empty( $plaintext_pass ) && empty( $notify ) ) ) {
 			return;
@@ -99,6 +104,7 @@ if ( ! function_exists( 'wp_new_user_notification' ) ) {
 
 		$message .= wp_login_url() . "\r\n";
 
-		wp_mail( $user->user_email, sprintf( __( '[%s] Your username and password info' ), $blogname ), $message );
+		$result = wp_mail( $user->user_email, sprintf( __( '[%s] Your username and password info' ), $blogname ), $message );
+		gf_user_registration()->log_wp_mail( $result, 'user' );
 	}
 }

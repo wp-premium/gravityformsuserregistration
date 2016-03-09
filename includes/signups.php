@@ -231,6 +231,9 @@ class GFUserSignups {
 		}
 
 		$signup->set_as_activated();
+		
+		// Send notifications
+		GFAPI::send_notifications( $signup->form, $signup->lead, 'gfur_user_activated' );
 
 		do_action( 'gform_activate_user', $user_id, $user_data, $signup->meta );
 
