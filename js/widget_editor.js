@@ -2,6 +2,29 @@
 	
 	$( document ).ready( function() {
 
+		// Toggle editor tabs.
+		$( document ).on( 'click', '.gf_login_widget_editor .tabs a', function( e ) {
+		
+			e.preventDefault();
+			
+			// Get target tab.
+			var widgetForm = $( this ).parent().parent(),
+				tabsNav = $( this ).parent(),
+				targetTab = $( this ).attr( 'data-tab' );
+				
+			// Switch active tab class.
+			tabsNav.find( 'a' ).removeClass( 'active' );
+			$( this ).addClass( 'active' );
+			
+			// Switch active tab.
+			widgetForm.find( '.tab-content:not( [data-tab="' + targetTab + '"] )' ).hide();
+			widgetForm.find( '.tab-content[data-tab="' + targetTab + '"]' ).show();
+			
+			// Update active view setting.
+			widgetForm.find( 'input[data-type="active_view"]' ).val( targetTab );
+		
+		} );
+
 		// Add logged in link
 		$( document ).on( 'click', '.gf_login_widget_add_link', function( e ) {
 			

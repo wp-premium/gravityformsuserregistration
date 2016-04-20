@@ -1,9 +1,9 @@
 # Copyright 2009-2016 Rocketgenius, Inc.
 msgid ""
 msgstr ""
-"Project-Id-Version: Gravity Forms User Registration Add-On 3.2.1\n"
+"Project-Id-Version: Gravity Forms User Registration Add-On 3.3\n"
 "Report-Msgid-Bugs-To: http://www.gravtiyhelp.com\n"
-"POT-Creation-Date: 2016-03-08 21:19:14+00:00\n"
+"POT-Creation-Date: 2016-04-19 15:16:50+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -24,573 +24,602 @@ msgstr ""
 "X-Poedit-SourceCharset: utf-8\n"
 "X-Textdomain-Support: yes\n"
 
-#: class-gf-user-registration.php:46
+#: class-gf-user-registration.php:70
 msgid "Register user only when a payment is received."
 msgstr ""
 
-#: class-gf-user-registration.php:46
+#: class-gf-user-registration.php:70
 msgid "Register user and create site only when a payment is received."
 msgstr ""
 
-#: class-gf-user-registration.php:292
+#: class-gf-user-registration.php:411
 msgid "Passwords may not contain the character \"\\\""
 msgstr ""
 
-#: class-gf-user-registration.php:322 includes/signups.php:217
+#: class-gf-user-registration.php:451 includes/signups.php:217
 msgid "Sorry, that email address is already used!"
 msgstr ""
 
-#: class-gf-user-registration.php:326 class-gf-user-registration.php:375
+#: class-gf-user-registration.php:455 class-gf-user-registration.php:510
 msgid ""
 "That email address has already been used. Please check your inbox for an "
 "activation email. It will become available in a couple of days if you do "
 "nothing."
 msgstr ""
 
-#: class-gf-user-registration.php:370
+#: class-gf-user-registration.php:504
 msgid "The email address can not be empty"
 msgstr ""
 
-#: class-gf-user-registration.php:379 class-gf-user-registration.php:381
+#: class-gf-user-registration.php:515 class-gf-user-registration.php:517
 msgid "This email address is already registered"
 msgstr ""
 
-#: class-gf-user-registration.php:392
+#: class-gf-user-registration.php:529
 msgid "The username can not be empty"
 msgstr ""
 
-#: class-gf-user-registration.php:397
+#: class-gf-user-registration.php:535
 msgid ""
 "The username can only contain alphanumeric characters (A-Z, 0-9), "
 "underscores, dashes and spaces"
 msgstr ""
 
-#: class-gf-user-registration.php:402
+#: class-gf-user-registration.php:541
 msgid ""
 "The username can only contain alphanumeric characters (A-Z, 0-9), "
 "underscores and dashes"
 msgstr ""
 
-#: class-gf-user-registration.php:407
+#: class-gf-user-registration.php:547
 msgid "This username is already registered"
 msgstr ""
 
-#: class-gf-user-registration.php:411
+#: class-gf-user-registration.php:552
 msgid "That username is currently reserved but may be available in a couple of days"
 msgstr ""
 
-#: class-gf-user-registration.php:707
+#: class-gf-user-registration.php:885
 msgid "Oops! You need to be logged in to use this form."
 msgstr ""
 
-#: class-gf-user-registration.php:1335
+#: class-gf-user-registration.php:1510
 msgid "Select BuddyPress Field"
 msgstr ""
 
-#: class-gf-user-registration.php:1479 includes/class-gf-login-widget.php:131
+#: class-gf-user-registration.php:1654 includes/class-gf-login-widget.php:178
 msgid "Register"
 msgstr ""
 
-#: class-gf-user-registration.php:1481
+#: class-gf-user-registration.php:1656
 msgid "Forgot Password"
 msgstr ""
 
-#: class-gf-user-registration.php:1569
+#: class-gf-user-registration.php:1744
 msgid "You are currently logged in as %2$s%1$s%2$s. %4$sLog out?%5$s"
 msgstr ""
 
-#: class-gf-user-registration.php:1575 includes/class-gf-login-widget.php:125
+#: class-gf-user-registration.php:1750 includes/class-gf-login-widget.php:172
 msgid "Logout"
 msgstr ""
 
-#: class-gf-user-registration.php:1726
+#: class-gf-user-registration.php:1900
 msgid "Login Form"
 msgstr ""
 
-#: class-gf-user-registration.php:1730 includes/class-gf-login-widget.php:25
-#: includes/class-gf-login-widget.php:116
+#: class-gf-user-registration.php:1904 includes/class-gf-login-widget.php:36
+#: includes/class-gf-login-widget.php:163
 msgid "Login"
 msgstr ""
 
-#: class-gf-user-registration.php:1739 class-gf-user-registration.php:2149
-#: class-gf-user-registration.php:2157 includes/class-gf-field-username.php:75
+#: class-gf-user-registration.php:1913 class-gf-user-registration.php:2323
+#: class-gf-user-registration.php:2331 includes/class-gf-field-username.php:75
 #: includes/class-gf-field-username.php:100
 #: includes/class-gf-pending-activations-list.php:16
 msgid "Username"
 msgstr ""
 
-#: class-gf-user-registration.php:1747 class-gf-user-registration.php:2215
-#: class-gf-user-registration.php:2223
+#: class-gf-user-registration.php:1921 class-gf-user-registration.php:2389
+#: class-gf-user-registration.php:2397
 msgid "Password"
 msgstr ""
 
-#: class-gf-user-registration.php:1756 class-gf-user-registration.php:1763
+#: class-gf-user-registration.php:1930 class-gf-user-registration.php:1937
 msgid "Remember Me"
 msgstr ""
 
-#: class-gf-user-registration.php:1986
+#: class-gf-user-registration.php:2160
 msgid "User Registration Add-On v3.0"
 msgstr ""
 
-#: class-gf-user-registration.php:1987
+#: class-gf-user-registration.php:2161
 msgid ""
 "Thank you for updating! The new version of the Gravity Forms User "
 "Registration Add-On makes changes to how you manage your User Registration "
 "feeds."
 msgstr ""
 
-#: class-gf-user-registration.php:1994
+#: class-gf-user-registration.php:2168
 msgid "Manage User Registration Contextually"
 msgstr ""
 
-#: class-gf-user-registration.php:1995
+#: class-gf-user-registration.php:2169
 msgid ""
 "User Registration Feeds are now accessed via the User Registration sub-menu "
 "within the Form Settings for the Form with which you would like to register "
 "a user."
 msgstr ""
 
-#: class-gf-user-registration.php:2005
+#: class-gf-user-registration.php:2179
 msgid "I understand this change, dismiss this message!"
 msgstr ""
 
-#: class-gf-user-registration.php:2006
+#: class-gf-user-registration.php:2180
 msgid "Please wait..."
 msgstr ""
 
-#: class-gf-user-registration.php:2023
+#: class-gf-user-registration.php:2197
 msgid "Global Settings"
 msgstr ""
 
-#: class-gf-user-registration.php:2028 class-gf-user-registration.php:2034
+#: class-gf-user-registration.php:2202 class-gf-user-registration.php:2208
 msgid "Custom Registration Page"
 msgstr ""
 
-#: class-gf-user-registration.php:2031
+#: class-gf-user-registration.php:2205
 msgid "Enable Custom Registration Page"
 msgstr ""
 
-#: class-gf-user-registration.php:2034
+#: class-gf-user-registration.php:2208
 msgid ""
 "When users attempt to access the default WordPress registration page, they "
 "will be redirected to this custom page instead."
 msgstr ""
 
-#: class-gf-user-registration.php:2039
+#: class-gf-user-registration.php:2213
 msgid "Registration Page"
 msgstr ""
 
-#: class-gf-user-registration.php:2041
+#: class-gf-user-registration.php:2215
 msgid "Select a Page"
 msgstr ""
 
-#: class-gf-user-registration.php:2069
+#: class-gf-user-registration.php:2243
 msgid "Pages"
 msgstr ""
 
-#: class-gf-user-registration.php:2086
+#: class-gf-user-registration.php:2260
 msgid "Other"
 msgstr ""
 
-#: class-gf-user-registration.php:2089
+#: class-gf-user-registration.php:2263
 msgid "Custom URL"
 msgstr ""
 
-#: class-gf-user-registration.php:2111
+#: class-gf-user-registration.php:2285
 msgid "Feed Settings"
 msgstr ""
 
-#: class-gf-user-registration.php:2116 class-gf-user-registration.php:2120
-#: class-gf-user-registration.php:2829
+#: class-gf-user-registration.php:2290 class-gf-user-registration.php:2294
+#: class-gf-user-registration.php:3003
 msgid "Name"
 msgstr ""
 
-#: class-gf-user-registration.php:2120
+#: class-gf-user-registration.php:2294
 msgid "Enter a feed name to uniquely identify this setup."
 msgstr ""
 
-#: class-gf-user-registration.php:2124 class-gf-user-registration.php:2129
-#: class-gf-user-registration.php:2830
+#: class-gf-user-registration.php:2298 class-gf-user-registration.php:2303
+#: class-gf-user-registration.php:3004
 msgid "Action"
 msgstr ""
 
-#: class-gf-user-registration.php:2130
+#: class-gf-user-registration.php:2304
 msgid ""
 "Select the type of feed you would like to create. \"Create\" feeds will "
 "create a new user. \"Update\" feeds will update users."
 msgstr ""
 
-#: class-gf-user-registration.php:2131
+#: class-gf-user-registration.php:2305
 msgid ""
 "A form can have multiple \"Create\" feeds <strong>or</strong> a single "
 "\"Update\" feed. A form cannot have both a \"Create\" feed and an "
 "\"Update\" feed."
 msgstr ""
 
-#: class-gf-user-registration.php:2140
+#: class-gf-user-registration.php:2314
 msgid "User Settings"
 msgstr ""
 
-#: class-gf-user-registration.php:2157
+#: class-gf-user-registration.php:2331
 msgid "Select the form field that should be used for the user's username."
 msgstr ""
 
-#: class-gf-user-registration.php:2165 class-gf-user-registration.php:2171
+#: class-gf-user-registration.php:2339 class-gf-user-registration.php:2345
 msgid "First Name"
 msgstr ""
 
-#: class-gf-user-registration.php:2171
+#: class-gf-user-registration.php:2345
 msgid "Select the form field that should be used for the user's first name."
 msgstr ""
 
-#: class-gf-user-registration.php:2175 class-gf-user-registration.php:2181
+#: class-gf-user-registration.php:2349 class-gf-user-registration.php:2355
 msgid "Last Name"
 msgstr ""
 
-#: class-gf-user-registration.php:2181
+#: class-gf-user-registration.php:2355
 msgid "Select the form field that should be used for the user's last name."
 msgstr ""
 
-#: class-gf-user-registration.php:2185 class-gf-user-registration.php:2191
+#: class-gf-user-registration.php:2359 class-gf-user-registration.php:2365
 msgid "Nickname"
 msgstr ""
 
-#: class-gf-user-registration.php:2191
+#: class-gf-user-registration.php:2365
 msgid "Select the form field that should be used for the user's nickname."
 msgstr ""
 
-#: class-gf-user-registration.php:2195 class-gf-user-registration.php:2199
+#: class-gf-user-registration.php:2369 class-gf-user-registration.php:2373
 msgid "Display Name"
 msgstr ""
 
-#: class-gf-user-registration.php:2199
+#: class-gf-user-registration.php:2373
 msgid "Select how the user's name should be displayed publicly."
 msgstr ""
 
-#: class-gf-user-registration.php:2203 class-gf-user-registration.php:2211
+#: class-gf-user-registration.php:2377 class-gf-user-registration.php:2385
 msgid "Email Address"
 msgstr ""
 
-#: class-gf-user-registration.php:2211
+#: class-gf-user-registration.php:2385
 msgid "Select the form field that should be used for the user's email address."
 msgstr ""
 
-#: class-gf-user-registration.php:2223
+#: class-gf-user-registration.php:2397
 msgid "Select the form field that should be used for the user's password."
 msgstr ""
 
-#: class-gf-user-registration.php:2227 class-gf-user-registration.php:2232
+#: class-gf-user-registration.php:2401 class-gf-user-registration.php:2406
 msgid "Role"
 msgstr ""
 
-#: class-gf-user-registration.php:2232
+#: class-gf-user-registration.php:2406
 msgid "Select the role the user should be assigned."
 msgstr ""
 
-#: class-gf-user-registration.php:2243
+#: class-gf-user-registration.php:2417
 msgid "User Meta"
 msgstr ""
 
-#: class-gf-user-registration.php:2263
+#: class-gf-user-registration.php:2437
 msgid "BuddyPress Profile"
 msgstr ""
 
-#: class-gf-user-registration.php:2286
+#: class-gf-user-registration.php:2460
 msgid "Network Options"
 msgstr ""
 
-#: class-gf-user-registration.php:2295
+#: class-gf-user-registration.php:2469
 msgid "Create Site"
 msgstr ""
 
-#: class-gf-user-registration.php:2299
+#: class-gf-user-registration.php:2473
 msgid "Create new site when a user register."
 msgstr ""
 
-#: class-gf-user-registration.php:2307 class-gf-user-registration.php:2310
+#: class-gf-user-registration.php:2481 class-gf-user-registration.php:2484
 msgid "Site Address"
 msgstr ""
 
-#: class-gf-user-registration.php:2310
+#: class-gf-user-registration.php:2484
 msgid "Select the form field that should be used for the site address."
 msgstr ""
 
-#: class-gf-user-registration.php:2319 class-gf-user-registration.php:2322
+#: class-gf-user-registration.php:2493 class-gf-user-registration.php:2496
 msgid "Site Title"
 msgstr ""
 
-#: class-gf-user-registration.php:2322
+#: class-gf-user-registration.php:2496
 msgid "Select the form field that should be used for the site title."
 msgstr ""
 
-#: class-gf-user-registration.php:2332 class-gf-user-registration.php:2336
+#: class-gf-user-registration.php:2506 class-gf-user-registration.php:2510
 msgid "Site Role"
 msgstr ""
 
-#: class-gf-user-registration.php:2336
+#: class-gf-user-registration.php:2510
 msgid "Select role the user should be assigned on the newly created site."
 msgstr ""
 
-#: class-gf-user-registration.php:2345 class-gf-user-registration.php:2349
+#: class-gf-user-registration.php:2519 class-gf-user-registration.php:2523
 msgid "Current Site Role"
 msgstr ""
 
-#: class-gf-user-registration.php:2349
+#: class-gf-user-registration.php:2523
 msgid ""
 "Select role the user should be assigned on the site they registered from. "
 "This option overrides the \"Role\" option under User Settings."
 msgstr ""
 
-#: class-gf-user-registration.php:2358 class-gf-user-registration.php:2368
-#: class-gf-user-registration.php:2384 class-gf-user-registration.php:2394
+#: class-gf-user-registration.php:2532 class-gf-user-registration.php:2542
+#: class-gf-user-registration.php:2558 class-gf-user-registration.php:2568
 msgid "Send Email?"
 msgstr ""
 
-#: class-gf-user-registration.php:2362
+#: class-gf-user-registration.php:2536
 msgid "Send the new site details to the user by email."
 msgstr ""
 
-#: class-gf-user-registration.php:2368
+#: class-gf-user-registration.php:2542
 msgid ""
 "Specify whether to send the new site details to the user by email. "
 "%sEnabled by default.%s"
 msgstr ""
 
-#: class-gf-user-registration.php:2375
+#: class-gf-user-registration.php:2549
 msgid "Additional Options"
 msgstr ""
 
-#: class-gf-user-registration.php:2388
-msgid "Send this password to the new user by email."
+#: class-gf-user-registration.php:2562
+msgid "Have WordPress send this password to the new user by email."
 msgstr ""
 
-#: class-gf-user-registration.php:2394
+#: class-gf-user-registration.php:2568
 msgid ""
-"Specify whether to send the password to the new user by email. %sEnabled by "
-"default.%s"
+"Specify whether WordPress should send the password to the new user by "
+"email. %sEnabled by default.%s"
 msgstr ""
 
-#: class-gf-user-registration.php:2402 class-gf-user-registration.php:2420
+#: class-gf-user-registration.php:2576 class-gf-user-registration.php:2594
 msgid "User Activation"
 msgstr ""
 
-#: class-gf-user-registration.php:2405
+#: class-gf-user-registration.php:2579
 msgid "Enable user activation."
 msgstr ""
 
-#: class-gf-user-registration.php:2410
-msgid "by email"
+#: class-gf-user-registration.php:2584
+msgid "by email from WordPress"
 msgstr ""
 
-#: class-gf-user-registration.php:2414
-msgid "manually"
+#: class-gf-user-registration.php:2588
+msgid "manually or by form notification"
 msgstr ""
 
-#: class-gf-user-registration.php:2418
+#: class-gf-user-registration.php:2592
 msgid "User Activation Type"
 msgstr ""
 
-#: class-gf-user-registration.php:2418
+#: class-gf-user-registration.php:2592
 msgid ""
-"%sBy Email:%s Send the user an email with an activation "
+"%sBy Email:%s WordPress will send the user an email with an activation "
 "link.%s%1$sManually:%2$s Activate each user manually from the Pending "
-"Activations page."
+"Activations page or send a form notification for the User Activation event "
+"with an activation link."
 msgstr ""
 
-#: class-gf-user-registration.php:2420
+#: class-gf-user-registration.php:2594
 msgid ""
 "Send users an email with an activation link. Users are only registered once "
 "they have activated their accounts."
 msgstr ""
 
-#: class-gf-user-registration.php:2428 class-gf-user-registration.php:2433
+#: class-gf-user-registration.php:2602 class-gf-user-registration.php:2607
 msgid "Update Condition"
 msgstr ""
 
-#: class-gf-user-registration.php:2428 class-gf-user-registration.php:2434
+#: class-gf-user-registration.php:2602 class-gf-user-registration.php:2608
 msgid "Registration Condition"
 msgstr ""
 
-#: class-gf-user-registration.php:2430
+#: class-gf-user-registration.php:2604
 msgid "Enable"
 msgstr ""
 
-#: class-gf-user-registration.php:2431
+#: class-gf-user-registration.php:2605
 msgid "Update user if"
 msgstr ""
 
-#: class-gf-user-registration.php:2431
+#: class-gf-user-registration.php:2605
 msgid "Register user if"
 msgstr ""
 
-#: class-gf-user-registration.php:2433
+#: class-gf-user-registration.php:2607
 msgid ""
 "When the update condition is enabled, form submissions will only update the "
 "user when the condition is met. The user data will always be populated into "
 "the form."
 msgstr ""
 
-#: class-gf-user-registration.php:2434
+#: class-gf-user-registration.php:2608
 msgid ""
 "When the registration condition is enabled, form submissions will only "
 "register the user when the condition is met."
 msgstr ""
 
-#: class-gf-user-registration.php:2444 class-gf-user-registration.php:2454
+#: class-gf-user-registration.php:2618 class-gf-user-registration.php:2628
 msgid "Set Post Author"
 msgstr ""
 
-#: class-gf-user-registration.php:2448
+#: class-gf-user-registration.php:2622
 msgid "Set user as post author."
 msgstr ""
 
-#: class-gf-user-registration.php:2454
+#: class-gf-user-registration.php:2628
 msgid ""
 "When a form submission creates a post and registers a user, set the new "
 "user as the post author. %sEnabled by default.%s"
 msgstr ""
 
-#: class-gf-user-registration.php:2520
+#: class-gf-user-registration.php:2694
 msgid "Set as %s"
 msgstr ""
 
-#: class-gf-user-registration.php:2530
+#: class-gf-user-registration.php:2704
 msgid "Deactivate site"
 msgstr ""
 
-#: class-gf-user-registration.php:2534
+#: class-gf-user-registration.php:2708
 msgid "Delete site"
 msgstr ""
 
-#: class-gf-user-registration.php:2556
+#: class-gf-user-registration.php:2730
 msgid "Standard User Meta"
 msgstr ""
 
-#: class-gf-user-registration.php:2559
+#: class-gf-user-registration.php:2733
 msgid "Website"
 msgstr ""
 
-#: class-gf-user-registration.php:2563
+#: class-gf-user-registration.php:2737
 msgid "AIM"
 msgstr ""
 
-#: class-gf-user-registration.php:2567
+#: class-gf-user-registration.php:2741
 msgid "Yahoo"
 msgstr ""
 
-#: class-gf-user-registration.php:2571
+#: class-gf-user-registration.php:2745
 msgid "Jabber / Google Talk"
 msgstr ""
 
-#: class-gf-user-registration.php:2575
+#: class-gf-user-registration.php:2749
 msgid "Biographical Information"
 msgstr ""
 
-#: class-gf-user-registration.php:2597
+#: class-gf-user-registration.php:2771
 msgid "Other User Meta"
 msgstr ""
 
-#: class-gf-user-registration.php:2603
+#: class-gf-user-registration.php:2777
 msgid "Add Custom Meta"
 msgstr ""
 
-#: class-gf-user-registration.php:2608
+#: class-gf-user-registration.php:2782
 msgid "Select Meta Key"
 msgstr ""
 
-#: class-gf-user-registration.php:2647
+#: class-gf-user-registration.php:2821
 msgid "%s Feeds"
 msgstr ""
 
-#: class-gf-user-registration.php:2651
+#: class-gf-user-registration.php:2825
 msgid "Add New"
 msgstr ""
 
-#: class-gf-user-registration.php:2687
+#: class-gf-user-registration.php:2861
 msgid "&mdash; Preserve current password &mdash;"
 msgstr ""
 
-#: class-gf-user-registration.php:2692
+#: class-gf-user-registration.php:2866
 msgid "Auto Generate Password"
 msgstr ""
 
-#: class-gf-user-registration.php:2704
+#: class-gf-user-registration.php:2878
 msgid "Create User"
 msgstr ""
 
-#: class-gf-user-registration.php:2709
+#: class-gf-user-registration.php:2883
 msgid "Update User"
 msgstr ""
 
-#: class-gf-user-registration.php:2775
+#: class-gf-user-registration.php:2949
 msgid "&mdash; Preserve current display name &mdash;"
 msgstr ""
 
-#: class-gf-user-registration.php:2794
+#: class-gf-user-registration.php:2968
 msgid "Select a Role"
 msgstr ""
 
-#: class-gf-user-registration.php:2811
+#: class-gf-user-registration.php:2985
 msgid "&mdash; Preserve current role &mdash;"
 msgstr ""
 
-#: class-gf-user-registration.php:2818
+#: class-gf-user-registration.php:2992
 msgid "&mdash; No role for this site &mdash;"
 msgstr ""
 
-#: class-gf-user-registration.php:2901 class-gf-user-registration.php:2902
+#: class-gf-user-registration.php:3075 class-gf-user-registration.php:3076
 msgid "User Registration Options"
 msgstr ""
 
-#: class-gf-user-registration.php:2902
+#: class-gf-user-registration.php:3076
 msgid ""
 "The selected form also has a User Registration feed. These options allow "
 "you to specify how you would like the PayPal and User Registration Add-ons "
 "to work together."
 msgstr ""
 
-#: class-gf-user-registration.php:2909
+#: class-gf-user-registration.php:3083
 msgid "Delay User Registration"
 msgstr ""
 
-#: class-gf-user-registration.php:2922
+#: class-gf-user-registration.php:3096
 msgid "Update User on Cancel"
 msgstr ""
 
-#: class-gf-user-registration.php:2925
+#: class-gf-user-registration.php:3099
 msgid "Update user when subscription is cancelled."
 msgstr ""
 
-#: class-gf-user-registration.php:2936
+#: class-gf-user-registration.php:3110
 msgid "Update Site on Cancel"
 msgstr ""
 
-#: class-gf-user-registration.php:2939
+#: class-gf-user-registration.php:3113
 msgid "Update site when subscription is cancelled."
 msgstr ""
 
-#: class-gf-user-registration.php:3520
+#: class-gf-user-registration.php:3694
 msgid "Site is created"
 msgstr ""
 
-#: class-gf-user-registration.php:3521
+#: class-gf-user-registration.php:3695
 msgid "User activation"
 msgstr ""
 
-#: class-gf-user-registration.php:3522
+#: class-gf-user-registration.php:3696
 msgid "User is activated"
 msgstr ""
 
-#: class-gf-user-registration.php:3523
+#: class-gf-user-registration.php:3697
 msgid "User is registered"
 msgstr ""
 
-#: class-gf-user-registration.php:3524
+#: class-gf-user-registration.php:3698
 msgid "User is updated"
 msgstr ""
 
-#: class-gf-user-registration.php:3549
+#: class-gf-user-registration.php:3723
 msgid "User Activation URL"
+msgstr ""
+
+#: class-gf-user-registration.php:4012
+msgid "New user registration on your site %s:"
+msgstr ""
+
+#: class-gf-user-registration.php:4013 class-gf-user-registration.php:4023
+msgid "Username: %s"
+msgstr ""
+
+#: class-gf-user-registration.php:4014
+msgid "Email: %s"
+msgstr ""
+
+#: class-gf-user-registration.php:4016
+msgid "[%s] New User Registration"
+msgstr ""
+
+#: class-gf-user-registration.php:4043
+msgid "To set your password, visit the following address:"
+msgstr ""
+
+#: class-gf-user-registration.php:4046
+msgid "Password: %s"
+msgstr ""
+
+#: class-gf-user-registration.php:4051
+msgid "[%s] Your username and password info"
 msgstr ""
 
 #: includes/activate.php:37
@@ -653,63 +682,64 @@ msgid ""
 "the <a href=\"%2$s\">homepage</a>."
 msgstr ""
 
-#: includes/class-gf-login-widget.php:21
+#: includes/class-gf-login-widget.php:39
 msgid "Gravity Forms Login Widget"
 msgstr ""
 
-#: includes/class-gf-login-widget.php:135
+#: includes/class-gf-login-widget.php:182
 msgid "Forgot Password?"
 msgstr ""
 
-#: includes/class-gf-login-widget.php:144
-#: includes/class-gf-login-widget.php:187
+#: includes/class-gf-login-widget.php:202
+#: includes/class-gf-login-widget.php:260
 msgid "Title"
 msgstr ""
 
-#: includes/class-gf-login-widget.php:149
-msgid "Login Form Options"
-msgstr ""
-
-#: includes/class-gf-login-widget.php:153
+#: includes/class-gf-login-widget.php:218
 msgid "Login Redirect URL"
 msgstr ""
 
-#: includes/class-gf-login-widget.php:156
-#: includes/class-gf-login-widget.php:194
+#: includes/class-gf-login-widget.php:219
+msgid "Current Page"
+msgstr ""
+
+#: includes/class-gf-login-widget.php:223
+#: includes/class-gf-login-widget.php:271
 msgid "Links"
 msgstr ""
 
-#: includes/class-gf-login-widget.php:164
-#: includes/class-gf-login-widget.php:170
-#: includes/class-gf-login-widget.php:202
-#: includes/class-gf-login-widget.php:208
+#: includes/class-gf-login-widget.php:231
+#: includes/class-gf-login-widget.php:239
+#: includes/class-gf-login-widget.php:279
+#: includes/class-gf-login-widget.php:287
 msgid "Link Text"
 msgstr ""
 
-#: includes/class-gf-login-widget.php:165
-#: includes/class-gf-login-widget.php:171
-#: includes/class-gf-login-widget.php:203
-#: includes/class-gf-login-widget.php:209
+#: includes/class-gf-login-widget.php:233
+#: includes/class-gf-login-widget.php:241
+#: includes/class-gf-login-widget.php:281
+#: includes/class-gf-login-widget.php:289
 msgid "Link URL"
 msgstr ""
 
-#: includes/class-gf-login-widget.php:177
+#: includes/class-gf-login-widget.php:246
+#: includes/class-gf-login-widget.php:294
+msgid "Add Link"
+msgstr ""
+
+#: includes/class-gf-login-widget.php:250
 msgid "Tab Index Start"
 msgstr ""
 
-#: includes/class-gf-login-widget.php:183
-msgid "Logged In Options"
-msgstr ""
-
-#: includes/class-gf-login-widget.php:191
+#: includes/class-gf-login-widget.php:266
 msgid "Welcome Message"
 msgstr ""
 
-#: includes/class-gf-login-widget.php:215
+#: includes/class-gf-login-widget.php:298
 msgid "Logout Redirect URL"
 msgstr ""
 
-#: includes/class-gf-login-widget.php:220
+#: includes/class-gf-login-widget.php:305
 msgid "Show user avatar"
 msgstr ""
 
@@ -815,34 +845,6 @@ msgstr ""
 
 #: includes/signups.php:299
 msgid "The user is already active."
-msgstr ""
-
-#: userregistration.php:70
-msgid "New user registration on your site %s:"
-msgstr ""
-
-#: userregistration.php:71 userregistration.php:81
-msgid "Username: %s"
-msgstr ""
-
-#: userregistration.php:72
-msgid "Email: %s"
-msgstr ""
-
-#: userregistration.php:74
-msgid "[%s] New User Registration"
-msgstr ""
-
-#: userregistration.php:99
-msgid "To set your password, visit the following address:"
-msgstr ""
-
-#: userregistration.php:102
-msgid "Password: %s"
-msgstr ""
-
-#: userregistration.php:107
-msgid "[%s] Your username and password info"
 msgstr ""
 
 #. Plugin Name of the plugin/theme
