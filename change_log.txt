@@ -1,5 +1,23 @@
 -----------------------------------------------------------
-Version 3.2.1
+Version 3.3
+    - Added support for redirect_to query parameter for login/logout form.
+    - Added German translation. Credit: Dominik Horn - netzstrategen.
+
+    - Updated wp_new_user_notification() to be gf_new_user_notification() to avoid issues where users are attempting to override the same function. Users wishing to override this function can do so by defining their own version in a theme or plugin.
+    - Updated login widget interface.
+    - Updated login widget editor to restore previously active tab after save.
+    - Updated some strings on the feed settings page.
+    - Updated 'Add Link' string in Login widget to be translatable.
+    - Updated Chinese (China) translation. Credit: Edi Michael.
+    - Updated Spanish (es_ES) translation.
+    - Updated login widget to not use boolval().
+    
+    - Fixed an issue with the PayPal integration with Gravity Forms 2.0.
+    - Fixed an issue where a PHP notice would appear when enqueuing scripts when not logged in.
+    - Fixed issue with login redirect URL not populating properly.
+    - Fixed an issue populating the Checkbox field when processing the update feed on form render.
+    - Fixed fatal error when using "user" shortcode in list output mode and meta value is not an array.
+    - Fixed textdomain for some strings.
     - Fixed fatal error when using "user" shortcode in list output mode and meta value is not an array.
 
 -----------------------------------------------------------
