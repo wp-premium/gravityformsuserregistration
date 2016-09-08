@@ -1,5 +1,4 @@
 <?php
-$a=0;
 class GFUserData{
 
 	public static function get_feed_by_form( $form_id, $is_active = false ) {

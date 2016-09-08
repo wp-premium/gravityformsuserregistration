@@ -252,7 +252,7 @@ class GF_Pending_Activations {
 			'users.php',
 			__( 'Pending Activations', 'gravityformsuserregistration' ),
 			__( 'Pending Activations', 'gravityformsuserregistration' ),
-			'gravityforms_userregistration',
+			'gravityforms_user_registration',
 			'gf-pending-activations',
 			array( $this, 'pending_activations_page' )
 		);
