@@ -1,4 +1,19 @@
 -----------------------------------------------------------
+Version 3.4
+    - Added additional logging statements.
+    - Added the gform_user_registration_user_meta_options filter to allow the options for the "Other User Meta" group in the User Meta setting on the settings page to be set before running the query against the usermeta table for existing meta keys. If the return value is not empty then the query for existing meta keys will not run.
+    - Updated German (de_DE) translation to fix an issue in Pending Activations page when Deutsch language is selected in WP settings due to incorrect usage of double quotes in the translation file.
+	- Fixed issue when trying to hide title, description or logged in avatar with the login shortcode.
+	- Fixed issue when including the deprecated.php file on some installations
+    - Fixed a typo in the capability for the pending activations page under the Users menu.
+    - Fixed fatal error which could occur if the BP_XProfile_Field class already exists.
+    - Fixed fatal error which could occur if the BP_XProfile_Group class already exists.
+    - Fixed an issue with the activation url if the WordPress Address and Site Address URLs differ.
+    - Fixed notice generated during validation when form did not have a password field
+    - Fixed issue with password validation.
+    - Fixed GF_Field array access/object notation notices with Gravity Forms 2.0.
+
+-----------------------------------------------------------
 Version 3.3
     - Added support for redirect_to query parameter for login/logout form.
     - Added German translation. Credit: Dominik Horn - netzstrategen.
