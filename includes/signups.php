@@ -120,7 +120,7 @@ class GFUserSignups {
 			return false;
 		}
 
-		$url = add_query_arg( array( 'page' => 'gf_activation', 'key' => $key ), get_site_url() . '/' );
+		$url = add_query_arg( array( 'page' => 'gf_activation', 'key' => $key ), home_url( '/' ) );
 
 		// BP replaces URL before passing the message, get the BP activation URL and replace
 		if ( gf_user_registration()->is_bp_active() ) {
@@ -138,7 +138,7 @@ class GFUserSignups {
 			return false;
 		}
 
-		$url = add_query_arg( array( 'page' => 'gf_activation', 'key' => $key ), get_site_url() );
+		$url = add_query_arg( array( 'page' => 'gf_activation', 'key' => $key ), home_url( '/' ) );
 
 		// BP replaces URL before passing the message, get the BP activation URL and replace
 		if ( gf_user_registration()->is_bp_active() ) {
