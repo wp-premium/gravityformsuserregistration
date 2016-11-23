@@ -30,7 +30,12 @@ class GF_Pending_Activations {
 
 		add_action( 'gform_form_settings_menu', array( $this, 'add_form_settings_menu' ), 10, 2 );
 		add_action( 'admin_menu',               array( $this, 'register_submenu_page_under_users' ) );
-		add_action( 'gform_entry_detail_sidebar_middle', array( $this, 'entry_pending_activation_meta_box' ), 10, 2 );
+
+		if ( gf_user_registration()->is_gravityforms_supported( '2.0' ) ) {
+			add_filter( 'gform_entry_detail_meta_boxes', array( $this, 'register_meta_box' ), 10, 2 );
+		} else {
+			add_action( 'gform_entry_detail_sidebar_middle', array( $this, 'entry_pending_activation_meta_box' ), 10, 2 );
+		}
 
 		$view    = rgget( 'view' );
 		$subview = rgget( 'subview' );
@@ -268,11 +273,6 @@ class GF_Pending_Activations {
 			return;
 		}
 
-		require_once( gf_user_registration()->get_base_path() . '/includes/signups.php' );
-
-		$entry_id       = rgar( $entry, 'id' );
-		$activation_key = GFUserSignups::get_lead_activation_key( $entry_id );
-
 		?>
 
 		<div class="postbox" id="gf_user_registration_pending_activation">
@@ -283,44 +283,87 @@ class GF_Pending_Activations {
 
 			<div class="inside">
 				<div>
-
-					<div id="gf_user_pending_activation">
-						<a onclick="activateUser( '<?php echo $activation_key; ?>' );" class="button" id="gf_user_pending_activate_link" style="vertical-align:middle;">
-							<?php _e( 'Activate User', 'gravityformuserregistraiton' ); ?>
-						</a>
-						<?php gform_tooltip( sprintf( '<h6>%s</h6> %s', __( 'Pending Activation', 'gravityformsuserregistration' ), __( 'This entry created a user who is pending activation. Click the "Activate User" button to activate the user.', 'gravityformsuserregistration' ) ) ); ?>
-					</div>
-
+					<?php $this->add_pending_activation_meta_box( array( 'entry' => $entry ) ) ?>
 				</div>
 			</div>
+		</div>
+
+
+
+		<?php
+	}
+
+	public function is_entry_pending_activation( $entry ) {
+		global $wpdb;
+		return self::get_pending_activations( $entry['form_id'], array( 'lead_id' => $entry['id'], 'get_total' => true ) ) > 0;
+	}
+
+	/**
+	 * Include the activate user button in the sidebar of the entry detail page.
+	 *
+	 * @param array $meta_boxes The properties for the meta boxes.
+	 * @param array $entry The entry currently being viewed/edited.
+	 *
+	 * @return array
+	 */
+	public function register_meta_box( $meta_boxes, $entry ) {
+		if ( $this->is_entry_pending_activation( $entry ) ) {
+			$meta_boxes['gf_user_pending_activation'] = array(
+				'title'    => esc_html__( 'User Registration', 'gravityformsuserregistration' ),
+				'callback' => array( $this, 'add_pending_activation_meta_box' ),
+				'context'  => 'side',
+			);
+		}
+
+		return $meta_boxes;
+	}
+
+	/**
+	 * The callback used to echo the content to the gf_user_registration meta box.
+	 *
+	 * @param array $args An array containing the form and entry objects.
+	 */
+	public function add_pending_activation_meta_box( $args ) {
+		require_once( gf_user_registration()->get_base_path() . '/includes/signups.php' );
+
+		$entry_id       = rgar( $args['entry'], 'id' );
+		$activation_key = GFUserSignups::get_lead_activation_key( $entry_id );
+
+		?>
+
+		<div id="gf_user_pending_activation">
+			<a onclick="activateUser( '<?php echo $activation_key; ?>' );" class="button" id="gf_user_pending_activate_link" style="vertical-align:middle;">
+				<?php esc_html_e( 'Activate User', 'gravityformuserregistraiton' ); ?>
+			</a>
+			<?php gform_tooltip( sprintf( '<h6>%s</h6> %s', esc_html__( 'Pending Activation', 'gravityformsuserregistration' ), esc_html__( 'This entry created a user who is pending activation. Click the "Activate User" button to activate the user.', 'gravityformsuserregistration' ) ) ); ?>
 		</div>
 
 		<script type="text/javascript">
 
 			function activateUser(activationKey) {
 
-				if( ! confirm( '<?php _e('Are you sure you want to activate this user?', 'gravityformsuserregistration'); ?>' ) ) {
+				if (!confirm(<?php echo json_encode( esc_html__( 'Are you sure you want to activate this user?', 'gravityformsuserregistration' ) ); ?>)) {
 					return;
 				}
 
-				var spinner = new ajaxSpinner( '#gf_user_pending_activate_link', 'margin-left:10px' );
+				var spinner = new ajaxSpinner('#gf_user_pending_activate_link', 'margin-left:10px');
 
-				jQuery.post( ajaxurl, {
+				jQuery.post(ajaxurl, {
 					key: activationKey,
 					action: 'gf_user_activate'
-				}, function( response ) {
+				}, function (response) {
 
 					// if there is an error message, alert it
-					if( response ) {
+					if (response) {
 
-						alert( response );
-						jQuery( '#gf_user_pending_activation' ).fadeOut();
+						alert(response);
+						jQuery('#gf_user_pending_activation').fadeOut();
 						spinner.destroy();
 
 					} else {
 
-						jQuery( '#gf_user_pending_activation' ).html( '<div class="updated" style="margin:-12px;"><p><?php _e( 'User Activated Successfully!', 'gravityformsuserregistration' ); ?></p></div>' );
-						setTimeout( 'jQuery( "#gf_user_registration_pending_activation" ).slideUp();', 5000 );
+						jQuery('#gf_user_pending_activation').html('<div class="updated" style="margin:-12px;"><p><?php esc_html_e( 'User Activated Successfully!', 'gravityformsuserregistration' ); ?></p></div>');
+						setTimeout('jQuery( "#gf_user_registration_pending_activation" ).slideUp();', 5000);
 						spinner.destroy();
 
 					}
@@ -334,13 +377,13 @@ class GF_Pending_Activations {
 				this.elem = elem;
 				this.image = '<img src="<?php echo GFCommon::get_base_url(); ?>/images/spinner.gif" style="' + style + '" />';
 
-				this.init = function() {
+				this.init = function () {
 					this.spinner = jQuery(this.image);
 					jQuery(this.elem).after(this.spinner);
 					return this;
 				}
 
-				this.destroy = function() {
+				this.destroy = function () {
 					jQuery(this.spinner).remove();
 				}
 
@@ -350,11 +393,6 @@ class GF_Pending_Activations {
 		</script>
 
 		<?php
-	}
-
-	public function is_entry_pending_activation( $entry ) {
-		global $wpdb;
-		return self::get_pending_activations( $entry['form_id'], array( 'lead_id' => $entry['id'], 'get_total' => true ) ) > 0;
 	}
 
 }

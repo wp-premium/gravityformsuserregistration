@@ -282,7 +282,7 @@ class GFSignup {
 		$this->meta   = unserialize( $signup->meta );
 		$this->lead   = GFFormsModel::get_lead( $this->meta['lead_id'] );
 		$this->form   = GFFormsModel::get_form_meta( $this->lead['form_id'] );
-		$this->config = gf_user_registration()->get_single_submission_feed( $this->lead, $this->form );
+		$this->config = gf_user_registration()->get_filtered_single_submission_feed( $this->lead, $this->form );
 
 	}
 

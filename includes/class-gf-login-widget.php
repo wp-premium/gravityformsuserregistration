@@ -28,7 +28,7 @@ if ( ! class_exists( 'GFLoginWidget' ) ) {
 		public function __construct() {
 
 			// Load text domain.
-			GFCommon::load_gf_text_domain( 'gravityformsuserregistration' );
+			gf_user_registration()->load_text_domain();
 
 			// Initialize widget.
 			WP_Widget::__construct(

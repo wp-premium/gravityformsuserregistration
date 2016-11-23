@@ -18,7 +18,8 @@ class GF_Pending_Activations_List extends WP_List_Table {
 				'date'       => __( 'Sign Up Date', 'gravityformsuserregistation' ),
 			),
 			array(),
-			array()
+			array(),
+			'user_login',
 		);
 
 		parent::__construct();
