@@ -56,6 +56,17 @@ class GF_User_Registration extends GFFeedAddOn {
 	}
 
 	/**
+	 * Handles anything which requires early initialization such as including the username field.
+	 */
+	public function pre_init() {
+		parent::pre_init();
+
+		if ( $this->is_gravityforms_supported() && class_exists( 'GF_Field' ) ) {
+			require_once 'includes/class-gf-field-username.php';
+		}
+	}
+
+	/**
 	 * Initializes GFAddon and adds the actions that we need
 	 *
 	 * @see GFAddon
@@ -117,10 +128,6 @@ class GF_User_Registration extends GFFeedAddOn {
 		// Add login form shortcode and sign on hooks
 		add_filter( 'gform_shortcode_login', array( $this, 'parse_login_shortcode' ), 10, 3 );
 		add_action( 'wp', array( $this, 'handle_login_submission' ) );
-
-		// Add username field
-		require_once 'includes/class-gf-field-username.php';
-		add_action( 'gform_editor_js_set_default_values', array( 'GF_Field_Username', 'set_default_label' ) );
 
 		$this->load_pending_activations();
 
@@ -304,6 +311,10 @@ class GF_User_Registration extends GFFeedAddOn {
 	 * @see $this->get_plugin_settings()
 	 */
 	public function custom_registration_page() {
+		if ( is_user_logged_in() ) {
+			return;
+		}
+
 		global $bp;
 
 		$action   = rgget( 'action' );
@@ -371,7 +382,7 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		$form  = $validation_result['form'];
 		$entry = GFFormsModel::get_current_lead();
-		$feed  = $this->get_single_submission_feed( $entry, $form );
+		$feed  = $this->get_filtered_single_submission_feed( $entry, $form );
 
 		if ( ! $feed ) {
 			return $validation_result;
@@ -690,7 +701,7 @@ class GF_User_Registration extends GFFeedAddOn {
 		$this->log( sprintf( 'Start with form id: %s; entry: %s', $form['id'], print_r( $entry, true ) ) );
 
 		if ( ! $feed ) {
-			$feed = $this->get_single_submission_feed( $entry, $form );
+			$feed = $this->get_filtered_single_submission_feed( $entry, $form );
 		}
 
 		$meta      = rgar( $feed, 'meta' );
@@ -776,7 +787,7 @@ class GF_User_Registration extends GFFeedAddOn {
 	 */
 	public function set_user_as_post_author( $post_id, $entry, $form ) {
 
-		$feed = $this->get_single_submission_feed( $entry, $form );
+		$feed = $this->get_filtered_single_submission_feed( $entry, $form );
 
 		if ( $feed && ! $this->is_update_feed( $feed ) && rgars( $feed, 'meta/setPostAuthor' ) ) {
 			$user_id = $this->get_user_by_entry_id( $entry['id'], true );
@@ -990,12 +1001,16 @@ class GF_User_Registration extends GFFeedAddOn {
 
 					if ( empty( $value ) ) {
 						foreach ( $field->inputs as $input ) {
-							$value[] = rgar( $mapped_fields, (string) $input['id'] );
+							$val = rgar( $mapped_fields, (string) $input['id'] );
+							if ( is_array( $val ) ) {
+								$val = GFCommon::implode_non_blank( ',', $val );
+							}
+							$value[] = $val;
 						}
 					}
 
 					if ( is_array( $value ) ) {
-						$value = implode( ',', $value );
+						$value = GFCommon::implode_non_blank( ',', $value );
 					}
 
 					break;
@@ -1083,7 +1098,7 @@ class GF_User_Registration extends GFFeedAddOn {
 	public function update_user( $entry, $form, $feed = false ) {
 
 		if ( ! $feed ) {
-			$feed = $this->get_single_submission_feed( $entry, $form );
+			$feed = $this->get_filtered_single_submission_feed( $entry, $form );
 		}
 
 		$meta    = rgar( $feed, 'meta' );
@@ -1757,7 +1772,7 @@ class GF_User_Registration extends GFFeedAddOn {
 			
 			/* Prepare the logged in message. */
 			if ( rgblank( $logged_in_message ) ) {
-				sprintf(
+				$logged_in_message = sprintf(
 					esc_html__( 'You are currently logged in as %2$s%1$s%2$s. %4$sLog out?%5$s', 'gravityformsuserregistration' ),
 					$current_user->display_name,
 					'<strong>', '</strong>',
@@ -1922,7 +1937,7 @@ class GF_User_Registration extends GFFeedAddOn {
 			'description' => gf_apply_filters( array( 'gform_user_registration_login_form_description' ), '' ),
 			'button'      => array(
 				'type' => 'text',
-				'text' => esc_html__( 'Login', 'gravityforms' )
+				'text' => esc_html__( 'Login', 'gravityformsuserregistration' )
 			),
 		);
 		
@@ -3694,13 +3709,28 @@ class GF_User_Registration extends GFFeedAddOn {
 		}
 
 		$events['gfur_site_created']    = __( 'Site is created', 'gravityformsuserregistration' );
-		$events['gfur_user_activation'] = __( 'User activation', 'gravityformsuserregistration' );
+		$events['gfur_user_activation'] = __( 'User is pending activation', 'gravityformsuserregistration' );
 		$events['gfur_user_activated']  = __( 'User is activated', 'gravityformsuserregistration' );
 		$events['gfur_user_registered'] = __( 'User is registered', 'gravityformsuserregistration' );
 		$events['gfur_user_updated']    = __( 'User is updated', 'gravityformsuserregistration' );
 	
 		return $events;
 		
+	}
+
+	/**
+	 * Gets the feed for this entry and passes it through the gform_addon_pre_process_feeds filters.
+	 *
+	 * @param array $entry The entry currently being processed.
+	 * @param array $form The form currently being processed.
+	 *
+	 * @return array
+	 */
+	public function get_filtered_single_submission_feed( $entry, $form ) {
+		$feed  = $this->get_single_submission_feed( $entry, $form );
+		$feeds = $this->pre_process_feeds( array( $feed ), $entry, $form );
+
+		return rgar( $feeds, 0, array() );
 	}
 
 
@@ -3710,6 +3740,9 @@ class GF_User_Registration extends GFFeedAddOn {
 	 * Include UR related merge tags in the merge tag drop downs in the form settings area.
 	 *
 	 * @param array $form The current form object.
+	 *
+	 * @since 3.4.4 Added support for {set_password_url}
+	 * @since 3.2.0
 	 *
 	 * @return array
 	 */
@@ -3723,6 +3756,9 @@ class GF_User_Registration extends GFFeedAddOn {
 					mergeTags['other'].tags.push({
 						tag: '{activation_url}',
 						label: '<?php esc_html_e( 'User Activation URL', 'gravityformsuserregistration' ) ?>'
+					}, {
+						tag: '{set_password_url}',
+						label: '<?php esc_html_e( 'Set Password URL', 'gravityformsuserregistration' ) ?>'
 					});
 
 					return mergeTags;
@@ -3745,6 +3781,9 @@ class GF_User_Registration extends GFFeedAddOn {
 	 * @param bool $nl2br Whether or not to convert newlines to break tags.
 	 * @param string $format The format requested for the location the merge is being used. Possible values: html, text or url.
 	 *
+	 * @since 3.4.4 Added support for {set_password_url}
+	 * @since 3.2.0
+	 *
 	 * @return string
 	 */
 	public function replace_merge_tags( $text, $form, $entry, $url_encode, $esc_html, $nl2br, $format ) {
@@ -3759,6 +3798,14 @@ class GF_User_Registration extends GFFeedAddOn {
 			$url = empty( $key ) ? '' : add_query_arg( array( 'page' => 'gf_activation', 'key'  => $key ), home_url( '/' ) );
 
 			$text = str_replace( $activation_url_merge_tag, $url, $text );
+		}
+
+		$set_password_url_merge_tag = '{set_password_url}';
+		if ( strpos( $text, $set_password_url_merge_tag ) !== false ) {
+			$user = $this->get_user_by_entry_id( $entry['id'] );
+			$url  = $user && ! is_wp_error( $user ) ? $this->get_set_password_url( $user ) : '';
+
+			$text = str_replace( $set_password_url_merge_tag, $url, $text );
 		}
 
 		return $text;
@@ -4004,7 +4051,6 @@ class GF_User_Registration extends GFFeedAddOn {
 			 *                               If 'admin', only the admin. If 'both', user and admin.
 			 */
 			function gf_new_user_notification( $user_id, $plaintext_pass = '', $notify = '' ) {
-				global $wpdb, $wp_hasher;
 				$user = get_userdata( $user_id );
 
 				// The blogname option is escaped with esc_html on the way into the database in sanitize_option
@@ -4025,25 +4071,8 @@ class GF_User_Registration extends GFFeedAddOn {
 				$message = sprintf( __( 'Username: %s' ), $user->user_login ) . "\r\n\r\n";
 
 				if ( empty( $plaintext_pass ) ) {
-
-					// Generate something random for a password reset key.
-					$key = wp_generate_password( 20, false );
-
-					/** This action is documented in wp-login.php */
-					do_action( 'retrieve_password_key', $user->user_login, $key );
-
-					// Hashes the plain-text key.
-					if ( empty( $wp_hasher ) ) {
-						require_once ABSPATH . WPINC . '/class-phpass.php';
-						$wp_hasher = new PasswordHash( 8, true );
-					}
-					$hashed = time() . ':' . $wp_hasher->HashPassword( $key );
-
-					// Inserts the hashed key into the database.
-					$wpdb->update( $wpdb->users, array( 'user_activation_key' => $hashed ), array( 'user_login' => $user->user_login ) );
-
 					$message .= __( 'To set your password, visit the following address:' ) . "\r\n\r\n";
-					$message .= '<' . network_site_url( "wp-login.php?action=rp&key=$key&login=" . rawurlencode( $user->user_login ), 'login' ) . ">\r\n\r\n";
+					$message .= '<' . $this->get_set_password_url( $user ) . ">\r\n\r\n";
 				} else {
 					$message .= sprintf( __( 'Password: %s' ), $plaintext_pass ) . "\r\n\r\n";
 				}
@@ -4056,6 +4085,50 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		}
 
+	}
+
+	/**
+	 * Retrieve the set password url for the specified user.
+	 *
+	 * Forked from WordPress 4.4.1
+	 *
+	 * @see wp_new_user_notification()
+	 *
+	 * @param WP_User $user The user object.
+	 *
+	 * @since 3.4.4.
+	 *
+	 * @return string
+	 */
+	public function get_set_password_url( $user ) {
+		global $wpdb, $wp_hasher;
+
+		// Generate something random for a password reset key.
+		$key = wp_generate_password( 20, false );
+
+		/** This action is documented in wp-login.php */
+		do_action( 'retrieve_password_key', $user->user_login, $key );
+
+		// Hashes the plain-text key.
+		if ( empty( $wp_hasher ) ) {
+			require_once ABSPATH . WPINC . '/class-phpass.php';
+			$wp_hasher = new PasswordHash( 8, true );
+		}
+		$hashed = time() . ':' . $wp_hasher->HashPassword( $key );
+
+		// Inserts the hashed key into the database.
+		$wpdb->update( $wpdb->users, array( 'user_activation_key' => $hashed ), array( 'user_login' => $user->user_login ) );
+
+		return network_site_url( "wp-login.php?action=rp&key=$key&login=" . rawurlencode( $user->user_login ), 'login' );
+	}
+
+	/**
+	 * Initializing translations.
+	 *
+	 * @todo remove once min GF version reaches 2.0.7.
+	 */
+	public function load_text_domain() {
+		GFCommon::load_gf_text_domain( $this->_slug, plugin_basename( dirname( $this->_full_path ) ) );
 	}
 
 

@@ -87,19 +87,14 @@ class GF_Field_Username extends GF_Field_Text {
 			'text'  => $this->get_form_editor_field_title()
 		);
 	}
-	
+
 	/**
-	 * Return the JavaScript to set the default field label.
-	 * 
-	 * @access public
-	 * @static
+	 * Include the script to set the default label for new fields.
+	 *
+	 * @return string
 	 */
-	public static function set_default_label() {
-		
-		echo 'case "username":
-			field.label = "' . esc_html__( 'Username', 'gravityformsuserregistration' ) . '";
-		break;';
-		
+	public function get_form_editor_inline_script_on_page_render() {
+		return sprintf( "function SetDefaultValues_%s(field) {field.label = '%s';}", $this->type, $this->get_form_editor_field_title() ) . PHP_EOL;
 	}
 
 }
