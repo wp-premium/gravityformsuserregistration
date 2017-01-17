@@ -44,7 +44,9 @@ class GF_Page_Choice_Walker extends Walker_Page {
 			$page->post_title = sprintf( __( '#%d (no title)' ), $page->ID );
 		}
 
-		/** This filter is documented in wp-includes/post-template.php */
+		if ( empty( $output ) ){
+			$output = array();
+		}
 		$output[] = array(
 			'label' => $indent . $page->post_title,
 			'value' => $page->ID
