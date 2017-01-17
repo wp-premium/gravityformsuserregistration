@@ -1558,6 +1558,12 @@ class GF_User_Registration extends GFFeedAddOn {
 	}
 
 	public function insert_buddypress_data( $bp_data ) {
+		if ( empty( $bp_data ) ) {
+			$this->log( 'aborting; no mapped fields.' );
+
+			return;
+		}
+
 		global $wpdb, $bp;
 
 		if ( ! function_exists( 'xprofile_set_field_data' ) ) {
@@ -1567,6 +1573,7 @@ class GF_User_Registration extends GFFeedAddOn {
 		foreach ( $bp_data as $item ) {
 			$success = xprofile_set_field_data( $item['field_id'], $item['user_id'], $item['value'] );
 			xprofile_set_field_visibility_level( $item['field_id'], $item['user_id'], $item['field']->default_visibility );
+			$this->log( sprintf( 'BP field: %s; Result: %s', $item['field_id'], var_export( (bool) $success, 1 ) ) );
 		}
 
 	}
@@ -1632,6 +1639,8 @@ class GF_User_Registration extends GFFeedAddOn {
 			} else {
 				$meta_value = $this->get_meta_value( $bp_field_id, $meta, $form, $entry );
 			}
+
+			$this->log( sprintf( 'BP field: %s; GF field: %s; value: %s', $bp_field_id, $gf_field_id, print_r( $meta_value, 1 ) ) );
 
 			$item['value']       = $meta_value;
 			$item['last_update'] = date( 'Y-m-d H:i:s' );
@@ -1773,9 +1782,8 @@ class GF_User_Registration extends GFFeedAddOn {
 			/* Prepare the logged in message. */
 			if ( rgblank( $logged_in_message ) ) {
 				$logged_in_message = sprintf(
-					esc_html__( 'You are currently logged in as %2$s%1$s%2$s. %4$sLog out?%5$s', 'gravityformsuserregistration' ),
-					$current_user->display_name,
-					'<strong>', '</strong>',
+					esc_html__( 'You are currently logged in as %s%s%s. %sLog out?%s', 'gravityformsuserregistration' ),
+					'<strong>', $current_user->display_name, '</strong>',
 					'<a href="' . wp_logout_url( $logout_redirect ) . '">', '</a>'
 				);
 			} else {
@@ -2511,7 +2519,7 @@ class GF_User_Registration extends GFFeedAddOn {
 						'type'      => 'checkbox',
 						'choices'   => array(
 							array(
-								'label' => esc_html__( 'Create new site when a user register.', 'gravityformsuserregistration' ),
+								'label' => esc_html__( 'Create new site when a user registers.', 'gravityformsuserregistration' ),
 								'name'  => 'createSite',
 								'value' => 1,
 								'onclick' => 'jQuery( this ).parents( "form" ).attr( "action", "#gaddon-setting-row-createSite" ).submit();'
@@ -3682,6 +3690,22 @@ class GF_User_Registration extends GFFeedAddOn {
 	public function get_multiselect_field_value( $entry, $field_id, $field ) {
 
 		return rgar( $entry, $field_id );
+	}
+
+	/**
+	 * Format the number field value according to the format selected on the field.
+	 *
+	 * @since 3.5.5
+	 *
+	 * @param array           $entry    The Entry currently being processed.
+	 * @param string          $field_id The ID of the Field currently being processed.
+	 * @param GF_Field_Number $field    The Field currently being processed.
+	 *
+	 * @return string
+	 */
+	public function get_number_field_value( $entry, $field_id, $field ) {
+
+		return $field->get_value_entry_detail( rgar( $entry, $field_id ), rgar( $entry, 'currency' ) );
 	}
 
 	public static function maybe_get_category_name( $field, $entry_value ) {
