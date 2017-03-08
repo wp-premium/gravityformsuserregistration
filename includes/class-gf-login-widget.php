@@ -114,6 +114,7 @@ if ( ! class_exists( 'GFLoginWidget' ) ) {
 		 */
 		public function update( $new_instance, $old_instance ) {
 
+			// Prepare instance.
 			$instance                           = $old_instance;
 			$instance['active_view']            = rgar( $new_instance, 'active_view' );
 			$instance['title']                  = strip_tags( $new_instance['title'] );
@@ -134,7 +135,7 @@ if ( ! class_exists( 'GFLoginWidget' ) ) {
 			}
 			$instance['logged_in_links'] = array_values( $instance['logged_in_links'] );
 
-			// Remov empty logged out links.
+			// Remove empty logged out links.
 			foreach ( $instance['logged_out_links'] as $i => $link ) {
 				if ( rgblank( $link['text'] ) && rgblank( $link['url'] ) ) {
 					unset( $instance['logged_out_links'][ $i ] );
@@ -142,7 +143,29 @@ if ( ! class_exists( 'GFLoginWidget' ) ) {
 			}
 			$instance['logged_out_links'] = array_values( $instance['logged_out_links'] );
 
+			// Loop through instance properties and sanitize.
+			foreach ( $instance as $key => &$value ) {
+
+				// Loop through array items and sanitize individually.
+				if ( is_array( $value ) ) {
+
+					foreach ( $value as &$child_item ) {
+
+						// If child item is array, map sanitization to array.
+						$child_item = is_array( $child_item ) ? array_map( 'sanitize_text_field', $child_item ) : sanitize_text_field( $child_item );
+
+					}
+
+				} else {
+
+					$value = sanitize_text_field( $value );
+
+				}
+
+			}
+
 			return $instance;
+
 		}
 
 		/**
