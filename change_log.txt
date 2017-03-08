@@ -1,4 +1,11 @@
 -----------------------------------------------------------
+Version 3.7
+	- Added security enhancements. Credit: Fletcher Horton - Horton's Art LLC.
+    - Fixed a PHP warning when populating a form field using the value from a BuddyPress datebox type field.
+	- Renamed the function hooked to the gform_merge_tags filter to prevent conflicts with other add-ons and custom code snippets.
+	- Updated gf_user_registration_login_form() to allow for login form arguments to be passed directly through a parameter.
+
+-----------------------------------------------------------
 Version 3.6
     - Added logging of BuddyPress field processing.
     - Fixed an issue where the number field value may not use the format configured on the field.
