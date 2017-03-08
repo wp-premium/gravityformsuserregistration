@@ -945,7 +945,8 @@ class GF_User_Registration extends GFFeedAddOn {
 
 				if ( $bp_field->type == 'datebox' && $value ) {
 					$gf_field = GFFormsModel::get_field( $form, $gf_field_id );
-					$value    = GFCommon::date_display( call_user_func( 'array_shift', explode( ' ', $value ) ), 'ymd_dash', $gf_field->dateFormat ? $gf_field->dateFormat : 'mdy' );
+					$value    = explode( ' ', $value );
+					$value    = GFCommon::date_display( array_shift( $value ), 'ymd_dash', $gf_field->dateFormat ? $gf_field->dateFormat : 'mdy' );
 				}
 
 				if ( ! empty( $value ) ) {
@@ -1866,7 +1867,7 @@ class GF_User_Registration extends GFFeedAddOn {
 		/* Open Gravity Form wrapper and form tag. */
 		$html  = "<div class='{$wrapper_css_class}' id='gform_wrapper_{$form['id']}'>";
 		$html .= "<form method='post' id='gform_{$form['id']}'>";
-		$html .= "<input type='hidden' name='login_redirect' value='" . $login_redirect . "' />";
+		$html .= "<input type='hidden' name='login_redirect' value='" . esc_attr( sanitize_text_field( $login_redirect ) ) . "' />";
 		
 		// Convert display title and description to boolean valudes.
 		$display_title       = filter_var( $display_title, FILTER_VALIDATE_BOOLEAN );
@@ -3775,8 +3776,8 @@ class GF_User_Registration extends GFFeedAddOn {
 			?>
 			<script type="text/javascript">
 				if (window.gform)
-					gform.addFilter('gform_merge_tags', 'add_merge_tags');
-				function add_merge_tags(mergeTags, elementId, hideAllFields, excludeFieldTypes, isPrepop, option) {
+					gform.addFilter('gform_merge_tags', 'gf_user_registration_merge_tags');
+				function gf_user_registration_merge_tags(mergeTags, elementId, hideAllFields, excludeFieldTypes, isPrepop, option) {
 					mergeTags['other'].tags.push({
 						tag: '{activation_url}',
 						label: '<?php esc_html_e( 'User Activation URL', 'gravityformsuserregistration' ) ?>'
