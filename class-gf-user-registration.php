@@ -1001,6 +1001,7 @@ class GF_User_Registration extends GFFeedAddOn {
 					$value = rgar( $mapped_fields, $field->id );
 
 					if ( empty( $value ) ) {
+						$value = array();
 						foreach ( $field->inputs as $input ) {
 							$val = rgar( $mapped_fields, (string) $input['id'] );
 							if ( is_array( $val ) ) {
@@ -1014,6 +1015,14 @@ class GF_User_Registration extends GFFeedAddOn {
 						$value = GFCommon::implode_non_blank( ',', $value );
 					}
 
+					break;
+
+				case 'multiselect':
+
+					$value = rgar( $mapped_fields, $field->id );
+					if ( $field->storageType === 'json' ) {
+						$value = json_decode( $value, true );
+					}
 					break;
 
 				case 'list':
@@ -1049,10 +1058,10 @@ class GF_User_Registration extends GFFeedAddOn {
 					// handle complex fields
 					$inputs = $field->get_entry_inputs();
 					if ( is_array( $inputs ) ) {
-						foreach ( $inputs as &$input ) {
+						foreach ( $inputs as $key => $input ) {
 							$filter_name              = self::prepopulate_input( $input['id'], rgar( $mapped_fields, (string) $input['id'] ) );
 							$field->allowsPrepopulate = true;
-							$input['name']            = $filter_name;
+							$inputs[ $key ]['name']   = $filter_name;
 						}
 						$field->inputs = $inputs;
 					} else {
@@ -1111,9 +1120,9 @@ class GF_User_Registration extends GFFeedAddOn {
 		// refreshing $user variable because it might have changed during add_user_meta
 		$user_obj  = new WP_User( $user_id );
 		$user      = get_object_vars( $user_obj->data );
-		$user_data = $this->get_user_data( $entry, $form, $feed, true );
+		$user_data = $this->get_user_data( $entry, $form, $feed, $user_id );
 
-		$user['user_email']   = $user_data['user_email'];
+		$user['user_email'] = $user_data['user_email'];
 	
 		// If a display name option is provided and it is not the preserve option, update the display name. */
 		if ( rgar( $meta, 'displayname' ) && rgar( $meta, 'displayname' ) !== 'gfur_preserve_display_name' ) {	
@@ -1511,11 +1520,8 @@ class GF_User_Registration extends GFFeedAddOn {
 
 	// # BUDDYPRESS FUNCTIONALITY --------------------------------------------------------------------------------------
 
-	public static function get_buddypress_fields() {
-
-		if ( ! class_exists( 'BP_XProfile_Group' ) ) {
-			require_once( WP_PLUGIN_DIR . '/buddypress/bp-xprofile/bp-xprofile-classes.php' );
-		}
+	public function get_buddypress_fields() {
+		$this->maybe_include_bp_xp_class( 'BP_XProfile_Group' );
 
 		// get BP field groups
 		$groups = BP_XProfile_Group::get( array( 'fetch_fields' => true ) );
@@ -1607,9 +1613,7 @@ class GF_User_Registration extends GFFeedAddOn {
 				$bp_field = new BP_XProfile_Field();
 				$bp_field->bp_xprofile_field( $bp_field_id );
 			} else {
-				if ( ! class_exists( 'BP_XProfile_Field' ) ) {
-					require_once( WP_PLUGIN_DIR . '/buddypress/bp-xprofile/bp-xprofile-classes.php' );
-				}
+				$this->maybe_include_bp_xp_class( 'BP_XProfile_Field' );
 				$bp_field = new BP_XProfile_Field( $bp_field_id );
 			}
 
@@ -1675,7 +1679,25 @@ class GF_User_Registration extends GFFeedAddOn {
 		return $this->prepare_dynamic_meta( rgars( $feed, 'meta/bpMeta' ) );
 	}
 
+	/**
+	 * If not already available include the specified BuddyPress XProfile class.
+	 *
+	 * @since 3.7.5
+	 *
+	 * @param string $class The BuddyPress XProfile class name.
+	 */
+	public function maybe_include_bp_xp_class( $class ) {
+		if ( class_exists( $class ) ) {
+			return;
+		}
 
+		if ( is_dir( WP_PLUGIN_DIR . '/buddypress/bp-xprofile/classes' ) ) {
+			$class = strtolower( str_replace( 'BP_XProfile_', '', $class ) );
+			require_once( WP_PLUGIN_DIR . '/buddypress/bp-xprofile/classes/class-bp-xprofile-' . $class . '.php' );
+		} else {
+			require_once( WP_PLUGIN_DIR . '/buddypress/bp-xprofile/bp-xprofile-classes.php' );
+		}
+	}
 
 
 
@@ -1865,7 +1887,7 @@ class GF_User_Registration extends GFFeedAddOn {
 		}
 		
 		/* Open Gravity Form wrapper and form tag. */
-		$html  = "<div class='{$wrapper_css_class}' id='gform_wrapper_{$form['id']}'>";
+		$html  = "<div class='{$wrapper_css_class} gf_login_form' id='gform_wrapper_{$form['id']}'>";
 		$html .= "<form method='post' id='gform_{$form['id']}'>";
 		$html .= "<input type='hidden' name='login_redirect' value='" . esc_attr( sanitize_text_field( $login_redirect ) ) . "' />";
 		
@@ -1908,7 +1930,7 @@ class GF_User_Registration extends GFFeedAddOn {
 				$register_url = wp_registration_url();
 			}
 
-			$html .= '<nav>';
+			$html .= '<nav class="gf_login_links">';
 			
 			foreach ( $logged_out_links as $link ) {
 				
@@ -1936,7 +1958,14 @@ class GF_User_Registration extends GFFeedAddOn {
 		
 		/* Initalize existing form object. */
 		if ( ! empty( $this->login_form ) ) {
-			return $this->login_form;
+			/**
+			 * Filter the login form object.
+			 *
+			 * @since 3.7.9
+			 *
+			 * @param array $form The login form object.
+			 */
+			return apply_filters( 'gform_userregistration_login_form', $this->login_form );
 		}
 		
 		/* Create form object. */
@@ -1987,53 +2016,70 @@ class GF_User_Registration extends GFFeedAddOn {
 		$form['fields'][] = $password_field;
 		$form['fields'][] = $remember_field;
 
-		$this->login_form = $form;
-		
+		/**
+		 * Filter the login form object.
+		 *
+		 * @since 3.7.9
+		 *
+		 * @param array $form The login form object.
+		 */
+		$this->login_form = apply_filters( 'gform_userregistration_login_form', $form );
+
 		return $this->login_form;	
 		
 	}
 	
 	/**
 	 * Attempt to login user when login form is submitted.
-	 * 
+	 *
+	 * @since  3.2
 	 * @access public
-	 * @return void
+	 *
+	 * @uses GFCommon::get_base_path()
+	 * @uses GFFormDisplay::validate()
 	 */
 	public function handle_login_submission() {
-		
-		/* Get the form ID. */
+
+		// Get the form ID.
 		$form_id = isset( $_POST['gform_submit'] ) ? absint( rgpost( 'gform_submit' ) ) : null;
-		
-		/* If form ID is not 0, exit. */
+
+		// If form ID is not 0, exit.
 		if ( $form_id !== 0 ) {
 			return;
 		}
-		
-		/* Load the form display class. */
+
+		// Load the form display class.
 		if ( ! class_exists( 'GFFormDisplay' ) ) {
 			require_once( GFCommon::get_base_path() . '/form_display.php' );
 		}
-		
-		/* Get the form field values and validate the form. */
+
+		// Get the form field values and validate the form.
 		$form         = $this->login_form_object();
-		$field_values = array( 
+		$field_values = array(
 			'1'   => sanitize_text_field( rgpost( 'input_1' ) ),
 			'2'   => sanitize_text_field( rgpost( 'input_2' ) ),
 			'3_1' => sanitize_text_field( rgpost( 'input_3_1' ) )
 		);
 		$is_valid     = GFFormDisplay::validate( $form, $field_values );
-		
-		/* If the form is valid, sign in. */
+
+		// If the form is valid, sign in.
 		if ( $is_valid ) {
-			
-			$sign_on = wp_signon( array(
-				'user_login'    => $field_values['1'],
-				'user_password' => $field_values['2'],
-				'remember'      => $field_values['3_1'] == '1' ? true : false
-			) );
+
+			$sign_on = wp_signon(
+				array(
+					'user_login'    => $field_values['1'],
+					'user_password' => $field_values['2'],
+					'remember'      => $field_values['3_1'] == '1' ? true : false
+				)
+			);
 
 			if ( is_wp_error( $sign_on ) ) {
-				
+
+				if ( rgar( $sign_on->errors, 'invalid_email' ) ) {
+					$form['fields'][0]->failed_validation = true;
+					$form['fields'][0]->validation_message = $sign_on->errors['invalid_email'][0];
+				}
+
 				if ( rgar( $sign_on->errors, 'invalid_username' ) ) {
 					$form['fields'][0]->failed_validation = true;
 					$form['fields'][0]->validation_message = $sign_on->errors['invalid_username'][0];
@@ -2043,7 +2089,7 @@ class GF_User_Registration extends GFFeedAddOn {
 					$form['fields'][1]->failed_validation = true;
 					$form['fields'][1]->validation_message = $sign_on->errors['incorrect_password'][0];
 				}
-				
+
 			} else {
 				/**
 				 * Filters the redirect URL after a user is logged in.
@@ -2053,11 +2099,11 @@ class GF_User_Registration extends GFFeedAddOn {
 				 */
 				$redirect_url = gf_apply_filters( array( 'gform_user_registration_login_redirect_url' ), rgpost( 'login_redirect' ), $sign_on );
 				wp_redirect( $redirect_url );
-				
+
 			}
-			
+
 		}
-		
+
 	}
 	
 	
@@ -2116,42 +2162,45 @@ class GF_User_Registration extends GFFeedAddOn {
 			)
 		);
 		
-		/* If no meta key is set or the meta key is the user password, return. */
+		// If no meta key is set or the meta key is the user password, return.
 		if ( rgblank( $key ) || $key === 'user_pass' ) {
 			return;
 		}
 		
-		/* Get the user. */
+		// Get the user.
 		$user = rgblank( $id ) ? wp_get_current_user() : get_user_by( 'id', $id );
 		
-		/* If the user doesn't exist, return. */
+		// If the user doesn't exist, return.
 		if ( ! $user->ID ) {
 			return;
 		}
+
+		// Get meta single type.
+		$single_meta = ! in_array( $output, array( 'csv', 'list' ) );
+
+		// Get the meta value.
+		$value = isset( $user->{$key} ) ? $user->{$key} : get_user_meta( $user->ID, $key, $single_meta );
 		
-		/* Get the meta value. */
-		$value = isset( $user->{$key} ) ? $user->{$key} : get_user_meta( $user->ID, $key, true );
-		
-		/* If the meta key doesn't exist, return. */
+		// If the meta key doesn't exist, return.
 		if ( rgblank( $value ) ) {
 			return;
 		}
 		
-		/* Parse out list data based on output type. */
+		// Parse out list data based on output type.
 		if ( $output === 'csv' || $output === 'list' ) {
 			
-			/* Decode JSON value. */
+			// Decode JSON value.
 			$value = $this->maybe_decode_json( $value );
 			
-			/* If value is not an array, default to raw output. */
+			// If value is not an array, default to raw output.
 			if ( ! is_array( $value ) ) {
 				return esc_html( $value );
 			}
 			
-			/* Escape all values. */
+			// Escape all values.
 			$value = array_map( 'esc_html', $value );
 			
-			/* Present data based on output type. */
+			// Present data based on output type.
 			if ( $output === 'csv' ) {
 				return implode( ', ', $value );
 			} else if ( $output === 'list' ) {
@@ -3366,12 +3415,12 @@ class GF_User_Registration extends GFFeedAddOn {
 		return false;
 	}
 
-	public function get_user_data( $entry, $form, $feed ) {
+	public function get_user_data( $entry, $form, $feed, $user_id = false ) {
 
 		$user_email = $this->get_meta_value( 'email', $feed, $form, $entry );
 
 		if ( $this->is_update_feed( $feed ) ) {
-			$user       = new WP_User( $entry['created_by'] );
+			$user       = new WP_User( $user_id ? $user_id : $entry['created_by'] );
 			$user_login = $user->get( 'user_login' );
 			$user_email = $user_email ? $user_email : $user->get( 'user_email' );
 		} else {
