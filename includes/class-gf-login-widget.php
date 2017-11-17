@@ -211,12 +211,12 @@ if ( ! class_exists( 'GFLoginWidget' ) ) {
 
 			// Ensure there is at least one logged in links row.
 			if ( empty( $instance['logged_in_links'] ) ) {
-				$instance['logged_in_links'][] = array( 'text' => null, 'url' => null );
+				$instance['logged_in_links'] = array( array( 'text' => null, 'url' => null ) );
 			}
 
 			// Ensure there is at least one logged out links row.
 			if ( empty( $instance['logged_out_links'] ) ) {
-				$instance['logged_out_links'][] = array( 'text' => null, 'url' => null );
+				$instance['logged_out_links'] = array( array( 'text' => null, 'url' => null ) );
 			}
 
 		?>
