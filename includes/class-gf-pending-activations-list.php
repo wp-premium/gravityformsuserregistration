@@ -81,13 +81,13 @@ class GF_Pending_Activations_List extends WP_List_Table {
 			$value .= '
 	            <div class="row-actions">
 	                <span class="inline hide-if-no-js">
-	                    <a title="Activate this sign up" href="javascript: if(confirm(\'' . __( 'Activate this sign up? ', 'gravityformsuserregistration' ) . __( "\'Cancel\' to stop, \'OK\' to activate.", 'gravityformsuserregistration' ) . '\')) { singleItemAction(\'activate\',\'' . $item['activation_key'] . '\'); } ">Activate</a> |
+	                    <a title="' . __( 'Activate this sign up', 'gravityformsuserregistration' ) . '" href="javascript: if(confirm(\'' . __( 'Activate this sign up? ', 'gravityformsuserregistration' ) . __( "\'Cancel\' to stop, \'OK\' to activate.", 'gravityformsuserregistration' ) . '\')) { singleItemAction(\'activate\',\'' . $item['activation_key'] . '\'); } ">' . __( 'Activate', 'gravityformsuserregistration') . '</a> |
 	                </span>
 	                <span class="inline hide-if-no-js">
-	                    <a title="View the entry associated with this sign up" href="' . admin_url("admin.php?page=gf_entries&view=entry&id={$item['form_id']}&lid={$item['lead_id']}") . '">View Entry</a> |
+	                    <a title="' . __( 'View the entry associated with this sign up', 'gravityformsuserregistration' ) . '" href="' . admin_url("admin.php?page=gf_entries&view=entry&id={$item['form_id']}&lid={$item['lead_id']}") . '">' . __( 'View Entry', 'gravityformsuserregistration' ) . '</a> |
 	                </span>
 	                <span class="inline hide-if-no-js">
-	                    <a title="Delete this sign up?" href="javascript: if(confirm(\'' . __( 'Delete this sign up? ', 'gravityformsuserregistration' ) . __( "\'Cancel\' to stop, \'OK\' to delete.", 'gravityformsuserregistration' ) . '\')) { singleItemAction(\'delete\',\'' . $item['activation_key'] . '\'); } ">Delete</a>
+	                    <a title="' . __( 'Delete this sign up?', 'gravityformsuserregistration' ) . '" href="javascript: if(confirm(\'' . __( 'Delete this sign up? ', 'gravityformsuserregistration' ) . __( "\'Cancel\' to stop, \'OK\' to delete.", 'gravityformsuserregistration' ) . '\')) { singleItemAction(\'delete\',\'' . $item['activation_key'] . '\'); } ">' . __( 'Delete', 'gravityformsuserregistration' ) . '</a>
 	                </span>
 	            </div>';
 		}

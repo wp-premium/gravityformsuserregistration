@@ -1,3 +1,14 @@
+# 3.9 | 2018-01-29
+  - Added support for Gravity Forms 2.3.
+  - Added GPL to the plugin header.
+  - Added the "Preserve current email" choice to the email address mapping drop down on the update type feed.
+  - Updated URIs in plugin header to use https.
+  - Updated username validation message to match WordPress' equivalent validation message.
+  - Updated strings in pending activations so they could be translated
+  - Fixed an issue which can prevent pending activations from being listed due to collation mismatch after installing the add-on after upgrading MySQL from 5.5 to 5.6.
+  - Fixed a PHP warning related to the login form/widget logged in/out links.
+
+
 # 3.8 | 2017-10-26
    - Added 'gform_userregistration_login_form' filter to allow modifying the login form object.
    - Added "gf_login_form" class to login form wrapper.
