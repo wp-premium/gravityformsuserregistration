@@ -175,9 +175,7 @@ class GFUserSignups {
 	}
 
 	public static function get_lead_activation_key( $lead_id ) {
-		global $wpdb;
-
-		return $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM {$wpdb->prefix}rg_lead_meta WHERE lead_id = %d AND meta_key = 'activation_key'", $lead_id ) );
+		return gform_get_meta( $lead_id, 'activation_key' );
 	}
 
 	/**
@@ -223,7 +221,9 @@ class GFUserSignups {
 		}
 
 		gf_user_registration()->log( "Activating signup for username: {$signup->user_login} - entry: {$signup->lead['id']}" );
-		$user_data = gf_user_registration()->create_user( $signup->lead, $signup->form, $signup->config, GFCommon::decrypt( $signup->meta['password'] ) );
+		$password = version_compare( gf_user_registration()->get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFCommon::decrypt( $signup->meta['password'] ) : GFCommon::openssl_decrypt( $signup->meta['password'] );
+
+		$user_data = gf_user_registration()->create_user( $signup->lead, $signup->form, $signup->config, $password );
 		$user_id   = rgar( $user_data, 'user_id' );
 
 		if ( ! $user_id ) {
