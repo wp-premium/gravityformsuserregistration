@@ -49,7 +49,7 @@ class GF_Pending_Activations {
 
 	public function add_form_settings_menu( $tabs, $form_id ) {
 		if ( gf_user_registration()->has_feed_type( 'create', array( 'id' => $form_id ) ) ) {
-			$tabs[] = array( 'name' => $this->_slug, 'label' => $this->_title );
+			$tabs[] = array( 'name' => $this->_slug, 'label' => __( $this->_title, 'gravityformsuserregistration' ) );
 		}
 
 		return $tabs;
@@ -61,7 +61,7 @@ class GF_Pending_Activations {
 		$form_id = $form['id'];
 		$form    = gf_apply_filters( 'gform_admin_pre_render', $form_id, $form );
 
-		GFFormSettings::page_header( $this->_title );
+		GFFormSettings::page_header( __( $this->_title, 'gravityformsuserregistration' ) );
 
 		?>
 
@@ -177,12 +177,18 @@ class GF_Pending_Activations {
 		$method       = $get_total ? 'get_var' : 'get_results';
 
 		if ( $form_id ) {
+			$entry_table = self::get_entry_table_name();
+			$entry_meta_table = self::get_entry_meta_table_name();
+
+			$entry_id_column = version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? 'lead_id' : 'entry_id';
+
+			$collate = ! empty( $wpdb->collate ) ? " COLLATE {$wpdb->collate}" : '';
 
 			$select = $get_total ? 'SELECT count(s.activation_key)' : 'SELECT s.*';
 			$sql    = "
-                $select FROM {$wpdb->prefix}rg_lead_meta lm
-                INNER JOIN {$wpdb->signups} s ON s.activation_key = lm.meta_value AND lm.meta_key = 'activation_key'
-                INNER JOIN {$wpdb->prefix}rg_lead l ON l.id = lm.lead_id
+                $select FROM {$entry_meta_table} lm
+                INNER JOIN {$wpdb->signups} s ON s.activation_key = lm.meta_value {$collate} AND lm.meta_key = 'activation_key'
+                INNER JOIN {$entry_table} l ON l.id = lm.{$entry_id_column}
                 $where
                 $order
                 $limit_offset";
@@ -395,6 +401,38 @@ class GF_Pending_Activations {
 		<?php
 	}
 
+	/**
+	 * Returns the entry table name for the current version of Gravity Forms.
+	 *
+	 * @since 3.8.3
+	 *
+	 * @return string
+	 */
+	public static function get_entry_table_name() {
+		return version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFFormsModel::get_lead_table_name() : GFFormsModel::get_entry_table_name();
+	}
+
+	/**
+	 * Returns the entry meta table name for current version of Gravity Forms.
+	 *
+	 * @since 3.8.3
+	 *
+	 * @return string
+	 */
+	public static function get_entry_meta_table_name() {
+		return version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFFormsModel::get_lead_meta_table_name() : GFFormsModel::get_entry_meta_table_name();
+	}
+
+	/**
+	 * Returns the database version for the current version of Gravity Forms.
+	 *
+	 * @since 3.8.3
+	 *
+	 * @return string
+	 */
+	public static function get_gravityforms_db_version() {
+		return gf_user_registration()->get_gravityforms_db_version();
+	}
 }
 
 function gf_pending_activations() {

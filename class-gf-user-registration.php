@@ -546,9 +546,9 @@ class GF_User_Registration extends GFFeedAddOn {
 				}
 
 				// Throws an error if the username contains invalid characters
-				if ( $username_valid && !validate_username( $username ) ) {
+				if ( $username_valid && ! validate_username( $username ) ) {
 					$username_valid = false;
-					$form           = $this->add_validation_error( $feed['meta']['username'], $form, __( 'The username can only contain alphanumeric characters (A-Z, 0-9), underscores, dashes and spaces', 'gravityformsuserregistration' ) );
+					$form           = $this->add_validation_error( $feed['meta']['username'], $form, __( 'This username is invalid because it uses illegal characters. Please enter a valid username.', 'gravityformsuserregistration' ) );
 				}
 
 				// Throws an error if a user on a BuddyPress site contains a space or other invalid characters
@@ -600,7 +600,10 @@ class GF_User_Registration extends GFFeedAddOn {
 		$password  = rgar( $user_data, 'password' );
 
 		if ( $password ) {
-			gform_update_meta( $entry['id'], 'userregistration_password', GFCommon::encrypt( $password ) );
+
+			$encrypted_password = version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFCommon::encrypt( $password ) : GFCommon::openssl_encrypt( $password );
+
+			gform_update_meta( $entry['id'], 'userregistration_password', $encrypted_password );
 		}
 
 	}
@@ -1428,12 +1431,14 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		$user_data = $this->get_user_data( $entry, $form, $feed );
 
+		$encrypted_password = version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFCommon::encrypt( $user_data['password'] ) : GFCommon::openssl_encrypt( $user_data['password'] );
+
 		$meta = array(
 			'lead_id'    => $entry['id'],
 			'entry_id'   => $entry['id'],
 			'user_login' => $user_data['user_login'],
 			'email'      => $user_data['user_email'],
-			'password'   => GFCommon::encrypt( $user_data['password'] ),
+			'password'   => $encrypted_password,
 		);
 
 		/**
@@ -1821,7 +1826,7 @@ class GF_User_Registration extends GFFeedAddOn {
 			$html .= '</p>';
 			
 			/* Display links. */
-			if ( ! empty( $logged_in_links ) ) {
+			if ( ! empty( $logged_in_links ) && is_array( $logged_in_links ) ) {
 				
 				foreach ( $logged_in_links as $link ) {
 					
@@ -1921,7 +1926,7 @@ class GF_User_Registration extends GFFeedAddOn {
 		$html .= '</div>';
 		
 		/* Display links. */
-		if ( ! empty( $logged_out_links ) ) {
+		if ( ! empty( $logged_out_links ) && is_array( $logged_out_links ) ) {
 			
 			if ( $this->get_plugin_setting( 'custom_registration_page_enable' ) == '1' ) {
 				$registration_page = $this->get_plugin_setting( 'custom_registration_page' );
@@ -1944,7 +1949,7 @@ class GF_User_Registration extends GFFeedAddOn {
 			
 		}
 		
-		return $html;		
+		return $html;
 		
 	}
 	
@@ -2025,7 +2030,7 @@ class GF_User_Registration extends GFFeedAddOn {
 		 */
 		$this->login_form = apply_filters( 'gform_userregistration_login_form', $form );
 
-		return $this->login_form;	
+		return $this->login_form;
 		
 	}
 	
@@ -2477,7 +2482,8 @@ class GF_User_Registration extends GFFeedAddOn {
 					'type'        => 'field_select',
 					'args'        => array(
 						'disable_first_choice' => true,
-						'input_types'          => array( 'email' )
+						'input_types'          => array( 'email' ),
+						'append_choices'       => $this->get_extra_email_choice()
 					),
 					'required'    => ! $is_update_feed,
 					'class'       => 'medium',
@@ -2990,6 +2996,29 @@ class GF_User_Registration extends GFFeedAddOn {
 		return $actions;
 	}
 
+	/**
+	 * Returns the "preserve current email" choice if this is an update type feed.
+	 *
+	 * @since 3.8.2
+	 *
+	 * @return array
+	 */
+	public function get_extra_email_choice() {
+
+		$choices   = array();
+		$feed_type = $this->get_setting( 'feedType' );
+
+		if ( $feed_type == 'update' ) {
+			$choices[] = array(
+				'label' => esc_html__( '&mdash; Preserve current email &mdash;', 'gravityformsuserregistration' ),
+				'value' => ''
+			);
+		}
+
+
+		return $choices;
+	}
+
 	public function get_extra_password_choices() {
 
 		$choices   = array();
@@ -3432,7 +3461,7 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		// password will be stored in entry meta for delayed feeds, check there first
 		if ( $password = gform_get_meta( $entry['id'], 'userregistration_password' ) ) {
-			$password = GFCommon::decrypt( $password );
+			$password = version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFCommon::decrypt( $password ) : GFCommon::openssl_decrypt( $password );
 		} else {
 			$password = $this->get_meta_value( 'password', $feed, $form, $entry );
 		}
@@ -4276,6 +4305,16 @@ class GF_User_Registration extends GFFeedAddOn {
 		return gf_user_registration()->maybe_process_feed( $entry, $form );
 	}
 
+	public static function get_gravityforms_db_version() {
+
+		if ( method_exists( 'GFFormsModel', 'get_database_version' ) ) {
+			$db_version = GFFormsModel::get_database_version();
+		} else {
+			$db_version = GFForms::$version;
+		}
+
+		return $db_version;
+	}
 
 }
 
