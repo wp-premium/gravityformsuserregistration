@@ -1001,7 +1001,7 @@ class GF_User_Registration extends GFFeedAddOn {
 
 				case 'checkbox':
 
-					$value = rgar( $mapped_fields, $field->id );
+					$value = rgar( $mapped_fields, $field->id, array() );
 
 					if ( empty( $value ) ) {
 						$value = array();
