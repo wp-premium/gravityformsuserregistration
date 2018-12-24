@@ -1,0 +1,9 @@
+{
+    "name": "wp-premium/gravityformsuserregistration",
+    "type": "wordpress-plugin",
+    "autoload": {
+        "classmap": [
+            "."
+        ]
+    }
+}

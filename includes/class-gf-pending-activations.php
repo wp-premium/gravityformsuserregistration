@@ -182,12 +182,14 @@ class GF_Pending_Activations {
 
 			$entry_id_column = version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? 'lead_id' : 'entry_id';
 
+			$charset_db = empty( $wpdb->charset ) ? 'utf8mb4' : $wpdb->charset;
+
 			$collate = ! empty( $wpdb->collate ) ? " COLLATE {$wpdb->collate}" : '';
 
 			$select = $get_total ? 'SELECT count(s.activation_key)' : 'SELECT s.*';
 			$sql    = "
                 $select FROM {$entry_meta_table} lm
-                INNER JOIN {$wpdb->signups} s ON s.activation_key = lm.meta_value {$collate} AND lm.meta_key = 'activation_key'
+                INNER JOIN {$wpdb->signups} s ON CONVERT(s.activation_key USING {$charset_db}) = CONVERT(lm.meta_value USING {$charset_db}) {$collate} AND lm.meta_key = 'activation_key'
                 INNER JOIN {$entry_table} l ON l.id = lm.{$entry_id_column}
                 $where
                 $order
@@ -435,6 +437,12 @@ class GF_Pending_Activations {
 	}
 }
 
+/**
+ * Returns an instance of the GF_Pending_Activations class
+ *
+ * @see    GF_Pending_Activations::get_instance()
+ * @return GF_Pending_Activations
+ */
 function gf_pending_activations() {
 	return GF_Pending_Activations::get_instance();
 }
