@@ -1,3 +1,15 @@
+# 4.0 | 2018-12-19
+  - Added support for data retention in Gravity Forms 2.4.
+  - Fixed an issue with login widget when using special characters in password.
+  - Fixed an issue where the username, email, and password fields may not be validated on multi-page forms if the feed conditional logic is not met when the page containing those fields is submitted.
+  - Fixed a deprecated function notice with PHP 7.2 when processing update type feeds on form display.
+  - Fixed BuddyPress overriding the role after the user is created.
+  - Fixed text domains for string translations.
+  - Fixed the user_nicename being saved to the _usermeta table instead of the _users table.
+  - Fixed an issue with the login form submission when the password contains the less than character.
+  - Fixed a fatal error which occurred if the GFFormDisplay class is not available when getting the login form HTML.
+  - Fixed an issue introduced in 3.9 which prevents the Pending Activations from being listed when the database tables are utf8 encoded instead of the newer utf8mb4.
+
 # 3.9 | 2018-01-29
   - Added support for Gravity Forms 2.3.
   - Added GPL to the plugin header.
@@ -77,7 +89,7 @@
    - Updated Chinese (China) translation. Credit: Edi Michael.
    - Updated Spanish (es_ES) translation.
    - Updated login widget to not use boolval().
-    
+
    - Fixed an issue with the PayPal integration with Gravity Forms 2.0.
    - Fixed an issue where a PHP notice would appear when enqueuing scripts when not logged in.
    - Fixed issue with login redirect URL not populating properly.
@@ -157,7 +169,7 @@
 # 2.0.1
    - Fixed typo in a translation string in userregistration.php
    - Updated POT file.
-  
+
 
 # 2.0 | 2014-11-05
    - Added support for updating file upload fields mapped to BuddyPress image fields (available via BP add-on).
