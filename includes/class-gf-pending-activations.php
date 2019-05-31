@@ -49,7 +49,7 @@ class GF_Pending_Activations {
 
 	public function add_form_settings_menu( $tabs, $form_id ) {
 		if ( gf_user_registration()->has_feed_type( 'create', array( 'id' => $form_id ) ) ) {
-			$tabs[] = array( 'name' => $this->_slug, 'label' => __( $this->_title, 'gravityformsuserregistration' ) );
+			$tabs[] = array( 'name' => $this->_slug, 'label' => __( $this->_title, 'gravityformsuserregistration' ), 'capabilities' => 'gravityforms_user_registration' );
 		}
 
 		return $tabs;
