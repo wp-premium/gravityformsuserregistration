@@ -1,5 +1,7 @@
 <?php
 
+defined( 'ABSPATH' ) || die();
+
 class GF_Page_Choice_Walker extends Walker_Page {
 
 	/**
