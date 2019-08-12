@@ -1,3 +1,11 @@
+### 4.3 | 2019-08-07
+- Added security enhancements.
+
+
+### 4.2 | 2019-07-10
+- Added security enhancements.
+
+
 ### 4.1 | 2019-05-15
 - Added *[gform_userregistration_associate_entry_with_user](https://docs.gravityforms.com/gform_userregistration_associate_entry_with_user/)* filter to add change if newly created user should be set as entry creator.
 - Updated minimum Gravity Forms version to 2.2.6.

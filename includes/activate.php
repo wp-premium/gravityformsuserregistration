@@ -1,5 +1,7 @@
 <?php
 
+defined( 'ABSPATH' ) || die();
+
 define( 'WP_INSTALLING', true );
 
 global $current_site;

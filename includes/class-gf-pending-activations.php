@@ -45,6 +45,46 @@ class GF_Pending_Activations {
 			add_action( 'gform_form_settings_page_' . $this->_slug, array( $this, 'form_settings_page' ) );
 		}
 
+		add_action( 'gform_userregistration_cron', array( $this, 'cron_remove_passwords' ) );
+
+	}
+
+	/**
+	 * Remove encrypted passwords after a short period.
+	 *
+	 * @return void
+	 */
+	public function cron_remove_passwords() {
+		global $wpdb;
+
+		if ( ! is_multisite() ) {
+			require_once gf_user_registration()->get_base_path() . '/includes/signups.php';
+			GFUserSignups::prep_signups_functionality();
+		}
+
+		$sql = "SELECT signup_id, meta FROM {$wpdb->prefix}signups 
+				WHERE registered < SUBDATE( CURDATE(), INTERVAL 7 DAY ) 
+				AND meta LIKE '%s:8:\"password\";%'
+				AND meta NOT LIKE '%s:8:\"password\";s:0:\"\";%'
+				LIMIT 1000";
+
+		$results = $wpdb->get_results( $sql );
+
+		foreach ( $results as $signup ) {
+
+			$signup->meta = maybe_unserialize( $signup->meta );
+			if ( ! is_array( $signup->meta ) ) {
+				$signup->meta = array();
+			}
+
+			$signup->meta['password'] = '';
+
+			$wpdb->update( $wpdb->signups, array(
+				'meta' => serialize( $signup->meta ),
+			), array( 'signup_id' => $signup->signup_id ) );
+
+		}
+
 	}
 
 	public function add_form_settings_menu( $tabs, $form_id ) {
@@ -357,15 +397,15 @@ class GF_Pending_Activations {
 				var spinner = new ajaxSpinner('#gf_user_pending_activate_link', 'margin-left:10px');
 
 				jQuery.post(ajaxurl, {
-					key: activationKey,
-					action: 'gf_user_activate'
+					key:     activationKey,
+					action: 'gf_user_activate',
+					nonce:  '<?php echo wp_create_nonce( 'gf_user_activate' ); ?>'
 				}, function (response) {
 
 					// if there is an error message, alert it
-					if (response) {
+					if ( ! response.success ) {
 
-						alert(response);
-						jQuery('#gf_user_pending_activation').fadeOut();
+						alert( response.data.message );
 						spinner.destroy();
 
 					} else {
