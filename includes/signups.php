@@ -309,10 +309,14 @@ class GFSignup {
 	function set_as_activated() {
 		global $wpdb;
 
+		// Remove password for security.
+		$this->meta['password'] = '';
+
 		$now    = current_time( 'mysql', true );
 		$result = $wpdb->update( $wpdb->signups, array(
 			'active'    => 1,
-			'activated' => $now
+			'activated' => $now,
+			'meta'      => serialize( $this->meta ),
 		), array( 'activation_key' => $this->activation_key ) );
 
 		return $result;

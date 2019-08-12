@@ -1,5 +1,7 @@
 <?php
 
+defined( 'ABSPATH' ) || die();
+
 require_once( ABSPATH . '/wp-admin/includes/class-wp-list-table.php' );
 
 class GF_Pending_Activations_List extends WP_List_Table {

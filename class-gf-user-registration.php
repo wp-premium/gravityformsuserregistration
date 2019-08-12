@@ -1,5 +1,7 @@
 <?php
 
+defined( 'ABSPATH' ) || die();
+
 // Includes the feeds portion of the add-on framework
 GFForms::include_feed_addon_framework();
 
@@ -64,6 +66,11 @@ class GF_User_Registration extends GFFeedAddOn {
 		if ( $this->is_gravityforms_supported() && class_exists( 'GF_Field' ) ) {
 			require_once 'includes/class-gf-field-username.php';
 		}
+
+		if ( ! wp_next_scheduled ( 'gform_userregistration_cron' ) ) {
+			wp_schedule_event( time(), 'twicedaily', 'gform_userregistration_cron' );
+		}
+
 	}
 
 	/**
@@ -82,7 +89,6 @@ class GF_User_Registration extends GFFeedAddOn {
 			)
 		);
 
-		add_filter( 'gform_addon_navigation', array( $this, 'maybe_create_temporary_menu_item' ) );
 		add_filter( 'gaddon_no_output_field_properties', array( $this, 'no_output_field_properties' ) );
 		add_filter( 'gform_enable_password_field', '__return_true' );
 
@@ -2173,17 +2179,22 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		parent::init_ajax();
 
-		add_action( 'wp_ajax_gf_dismiss_user_registration_menu', array( $this, 'ajax_dismiss_menu' ) );
 		add_action( 'wp_ajax_gf_user_activate', array( __class__, 'activate_user' ) );
 
 	}
 
-	public function ajax_dismiss_menu() {
-		$current_user = wp_get_current_user();
-		update_metadata( 'user', $current_user->ID, 'dismiss_user_registration_menu', '1' );
-	}
-
 	public static function activate_user() {
+
+		// Verify nonce.
+		if ( false === wp_verify_nonce( rgpost( 'nonce' ), 'gf_user_activate' ) ) {
+			wp_send_json_error( array( 'message' => wp_strip_all_tags( __( 'Access denied.', 'gravityformsuserregistration' ) ) ) );
+		}
+
+		// If user is not authorized, exit.
+		if ( ! GFCommon::current_user_can_any( 'gravityforms_user_registration' ) ) {
+			wp_send_json_error( array( 'message' => wp_strip_all_tags( __( 'Access denied.', 'gravityformsuserregistration' ) ) ) );
+		}
+
 		require_once( gf_user_registration()->get_base_path() . '/includes/signups.php' );
 
 		GFUserSignups::prep_signups_functionality();
@@ -2193,12 +2204,11 @@ class GF_User_Registration extends GFFeedAddOn {
 		$error_message = '';
 
 		if ( is_wp_error( $userdata ) ) {
-			$error_message = $userdata->get_error_message();
+			wp_send_json_error( array( 'message' => $userdata->get_error_message() ) );
+		} else {
+			wp_send_json_success();
 		}
 
-		echo $error_message;
-
-		exit;
 	}
 
 
@@ -2273,72 +2283,6 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		return esc_html( $value );
 
-	}
-
-
-
-
-	// # TEMPORARY MENU PAGE (for 2.x to 3.x upgrade) ------------------------------------------------------------------
-
-	public function maybe_create_temporary_menu_item( $menus ) {
-		$current_user = wp_get_current_user();
-		$dismiss_menu = get_metadata( 'user', $current_user->ID, 'dismiss_user_registration_menu', true );
-		if ( $dismiss_menu != '1' ) {
-			$menus[] = array(
-				'name'       => $this->_slug,
-				'label'      => $this->get_short_title(),
-				'callback'   => array( $this, 'temporary_plugin_page' ),
-				'permission' => $this->_capabilities_form_settings,
-			);
-		}
-
-		return $menus;
-	}
-
-	public function temporary_plugin_page() {
-		?>
-		<script type="text/javascript">
-			function dismissMenu(){
-				jQuery('#gf_spinner').show();
-				jQuery.post(ajaxurl, {
-						action : "gf_dismiss_user_registration_menu"
-					},
-					function (response) {
-						document.location.href='?page=gf_edit_forms';
-						jQuery('#gf_spinner').hide();
-					}
-				);
-
-			}
-		</script>
-
-		<div class="wrap about-wrap">
-			<h1><?php esc_html_e( 'User Registration Add-On v3.0', 'gravityformsuserregistration' ) ?></h1>
-			<div class="about-text"><?php esc_html_e( 'Thank you for updating! The new version of the Gravity Forms User Registration Add-On makes changes to how you manage your User Registration feeds.', 'gravityformsuserregistration' ) ?></div>
-			<div class="changelog">
-
-				<hr/>
-
-				<div class="feature-section col two-col">
-					<div class="col-1">
-						<h3><?php esc_html_e( 'Manage User Registration Contextually', 'gravityformsuserregistration' ) ?></h3>
-						<p><?php esc_html_e( 'User Registration Feeds are now accessed via the User Registration sub-menu within the Form Settings for the Form with which you would like to register a user.', 'gravityformsuserregistration' ) ?></p>
-					</div>
-					<div class="col-2 last-feature">
-						<img src="http://gravityforms.s3.amazonaws.com/webimages/AddonNotice/NewUserRegistration3.png" style="margin-top:20px;">
-					</div>
-				</div>
-
-				<hr/>
-
-				<form method="post" id="dismiss_menu_form" style="margin-top: 20px;">
-					<input type="checkbox" name="dismiss_user_registration_menu" id="dismiss_user_registration_menu" value="1" onclick="dismissMenu();"> <label for="dismiss_user_registration_menu"><?php esc_html_e( 'I understand this change, dismiss this message!', 'gravityformsuserregistration' ) ?></label>
-					<img id="gf_spinner" src="<?php echo GFCommon::get_base_url() . '/images/spinner.gif'?>" alt="<?php esc_html_e( 'Please wait...', 'gravityformsuserregistration' ) ?>" style="display:none;"/>
-				</form>
-
-			</div>
-		</div>
-	<?php
 	}
 
 
