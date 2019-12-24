@@ -3,7 +3,7 @@
 Plugin Name: Gravity Forms User Registration Add-On
 Plugin URI: https://www.gravityforms.com
 Description: Allows WordPress users to be automatically created upon submitting a Gravity Form.
-Version: 4.3
+Version: 4.4
 Author: rocketgenius
 Author URI: https://www.rocketgenius.com
 License: GPL-2.0+
@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 defined( 'ABSPATH' ) || die();
 
-define( 'GF_USER_REGISTRATION_VERSION', '4.3' );
+define( 'GF_USER_REGISTRATION_VERSION', '4.4' );
 
 // If Gravity Forms is loaded, bootstrap the User Registration Add-On.
 add_action( 'gform_loaded', array( 'GF_User_Registration_Bootstrap', 'load' ), 5 );
