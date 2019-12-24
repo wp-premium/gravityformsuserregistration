@@ -85,7 +85,7 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		$this->add_delayed_payment_support(
 			array(
-				'option_label' => ! is_multisite() ? esc_html__( 'Register user only when a payment is received.', 'gravityformsuserregistration' ) : esc_html__( 'Register user and create site only when a payment is received.', 'gravityformsuserregistration' )
+				'option_label' => esc_html__( 'Process the feed only when a payment is received.', 'gravityformsuserregistration' ),
 			)
 		);
 
@@ -118,12 +118,21 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		// PayPal options
 		if ( $this->is_gravityforms_supported( '2.0-beta-2' ) ) {
-			remove_filter( 'gform_gravityformspaypal_feed_settings_fields', array( $this, 'add_paypal_post_payment_actions' ) );
+			if ( method_exists( $this, 'add_post_payment_actions' ) ) {
+				remove_filter( 'gform_addon_feed_settings_fields', array( $this, 'add_post_payment_actions' ) );
+			} else {
+				remove_filter( 'gform_gravityformspaypal_feed_settings_fields', array( $this, 'add_paypal_post_payment_actions' ) );
+			}
 		} else {
-			remove_action( 'gform_paypal_action_fields', array( $this, 'add_paypal_settings' ), 10, 2 );
+			remove_action( 'gform_paypal_action_fields', array( $this, 'add_paypal_settings' ), 10 );
 			remove_filter( 'gform_paypal_save_config', array( $this, 'save_paypal_settings' ) );
 		}
-		add_filter( 'gform_paypal_feed_settings_fields', array( $this, 'add_paypal_settings' ), 10, 2 );
+
+		if ( method_exists( $this, 'add_post_payment_actions' ) ) {
+			add_filter( 'gform_addon_feed_settings_fields', array( $this, 'add_feed_settings' ), 10, 2 );
+		} else {
+			add_filter( 'gform_gravityformspaypal_feed_settings_fields', array( $this, 'add_paypal_settings' ), 10, 2 );
+		}
 
 		// add paypal ipn hooks
 		add_action( 'gform_subscription_canceled', array( $this, 'downgrade_user' ), 10, 2 );
@@ -908,6 +917,10 @@ class GF_User_Registration extends GFFeedAddOn {
 	// # USER UPDATE ---------------------------------------------------------------------------------------------------
 
 	public static function maybe_prepopulate_form( $form ) {
+
+		if ( empty( $form['id'] ) ) {
+			return $form;
+		}
 
 		$feed = gf_user_registration()->get_update_feed( $form['id'] );
 
@@ -3239,11 +3252,57 @@ class GF_User_Registration extends GFFeedAddOn {
 	<?php
 	}
 
-	public function add_paypal_settings( $settings, $form ) {
+	/**
+	 * Add new settings section to the payment feed.
+	 *
+	 * @since unknown
+	 * @since 4.4     Call $this->add_feed_settings().
+	 *
+	 * @param array   $feed_settings_fields The add-on feed settings.
+	 * @param GFAddOn $addon                The current instance of the add-on (i.e. GF_User_Registration, GFPayPal).
+	 *
+	 * @return array
+	 */
+	public function add_paypal_settings( $feed_settings_fields, $addon ) {
+
+		return $this->add_feed_settings( $feed_settings_fields, $addon );
+	}
+
+	/**
+	 * Add new settings section to the payment feed.
+	 *
+	 * @since 4.4
+	 *
+	 * @param array   $feed_settings_fields The add-on feed settings.
+	 * @param GFAddOn $addon                The current instance of the add-on (i.e. GF_User_Registration, GFPayPal).
+	 *
+	 * @return array
+	 */
+	public function add_feed_settings( $feed_settings_fields, $addon ) {
+
+		if ( ! $addon instanceof GFPaymentAddOn ) {
+			return $feed_settings_fields;
+		}
+
+		$config = array();
+
+		if ( method_exists( $addon, 'get_post_payment_actions_config' ) ) {
+			$config = $addon->get_post_payment_actions_config( $this->get_slug() );
+		} elseif ( $addon instanceof GFPayPal ) {
+			$config = array(
+				'position' => 'after',
+				'setting'  => 'options',
+			);
+		}
+		// $config is just for checking if we should add the UR settings, no actually use here.
+		if ( empty( $config ) ) {
+			return $feed_settings_fields;
+		}
 
 		$ur_settings = array(
 			'title'      => esc_html__( 'User Registration Options', 'gravityformsuserregistration' ),
-			'tooltip'    => sprintf( '<h6>%s</h6> %s', esc_html__( 'User Registration Options', 'gravityformsuserregistration' ), esc_html__( 'The selected form also has a User Registration feed. These options allow you to specify how you would like the PayPal and User Registration Add-ons to work together.', 'gravityformuserregistration' ) ),
+			/* translators: 1. HTML H6 open tag 2. HTML H6 close tag 3. The payment addon title. */
+			'tooltip'    => sprintf( esc_html__( '%1$sUser Registration Options%2$sThe selected form also has a User Registration feed. These options allow you to specify how you would like the %3$s and User Registration Add-ons to work together.', 'gravityformuserregistration' ), '<h6>', '</h6>', $addon->get_short_title() ),
 			'fields'     => array(),
 			'dependency' => 'transactionType',
 		);
@@ -3256,9 +3315,9 @@ class GF_User_Registration extends GFFeedAddOn {
 				array(
 					'name'  => "delay_{$this->_slug}",
 					'label' => rgar( $this->delayed_payment_integration, 'option_label' ),
-					'value' => 1
-				)
-			)
+					'value' => 1,
+				),
+			),
 		);
 
 		$ur_settings['fields'][] = array(
@@ -3266,12 +3325,12 @@ class GF_User_Registration extends GFFeedAddOn {
 			'label'      => esc_html__( 'Update User on Cancel', 'gravityformsuserregistration' ),
 			'type'       => 'checkbox_and_select',
 			'checkbox'   => array(
-				'label' => esc_html__( 'Update user when subscription is cancelled.', 'gravityformsuserregistration' )
+				'label' => esc_html__( 'Update user when subscription is cancelled.', 'gravityformsuserregistration' ),
 			),
 			'select'     => array(
-				'choices' => $this->get_update_user_actions_choices()
+				'choices' => $this->get_update_user_actions_choices(),
 			),
-			'dependency' => array( 'field' => 'transactionType', 'values' => array( 'subscription' ) ),
+			'dependency' => array( 'field' => 'transactionType', 'values' => array( 'subscription' ), ),
 		);
 
 		if ( is_multisite() ) {
@@ -3280,18 +3339,21 @@ class GF_User_Registration extends GFFeedAddOn {
 				'label'      => esc_html__( 'Update Site on Cancel', 'gravityformsuserregistration' ),
 				'type'       => 'checkbox_and_select',
 				'checkbox'   => array(
-					'label' => esc_html__( 'Update site when subscription is cancelled.', 'gravityformsuserregistration' )
+					'label' => esc_html__( 'Update site when subscription is cancelled.', 'gravityformsuserregistration' ),
 				),
 				'select'     => array(
-					'choices' => $this->get_update_site_actions_choices()
+					'choices' => $this->get_update_site_actions_choices(),
 				),
-				'dependency' => array( 'field' => 'transactionType', 'values' => array( 'subscription' ) ),
+				'dependency' => array(
+					'field'  => 'transactionType',
+					'values' => array( 'subscription' ),
+				),
 			);
 		}
 
-		$settings = array_merge( $settings, array( $ur_settings ) );
+		$feed_settings_fields = array_merge( $feed_settings_fields, array( $ur_settings ) );
 
-		return $settings;
+		return $feed_settings_fields;
 	}
 
 
@@ -3697,6 +3759,23 @@ class GF_User_Registration extends GFFeedAddOn {
 		global $wpdb;
 
 		$site_id = $wpdb->get_var( $wpdb->prepare( "SELECT site_id FROM $wpdb->sitemeta WHERE ( meta_key = 'entry_id' OR meta_key = '_gform-entry_id' OR meta_key = '_gform-update-entry-id' ) AND meta_value = %d", $entry_id ) );
+
+		if ( ! $site_id ) {
+			$user = self::get_user_by_entry_id( $entry_id );
+			if ( $user && ! is_wp_error( $user ) ) {
+				$sites = get_blogs_of_user( $user->ID );
+
+				if ( $sites ) {
+					foreach ( $sites as $_site_id => $site ) {
+						if ( $entry_id == get_blog_option( $_site_id, 'entry_id' ) || $entry_id == get_blog_option( $_site_id, '_gform-entry_id' ) || $entry_id == get_blog_option( $_site_id, '_gform-update-entry-id' ) ) {
+							$site_id = $_site_id;
+
+							break;
+						}
+					}
+				}
+			}
+		}
 
 		return $site_id;
 	}
