@@ -1,3 +1,9 @@
+### 4.4 | 2019-09-25
+- Added support for Stripe Checkout to display the "User Registration Options" section in the feed.
+- Fixed an issue where a site cannot be updated when the subscription is canceled on a multisite install.
+- Fixed a PHP warning which occurs when an invalid form ID is used with the gravityform shortcode.
+
+
 ### 4.3 | 2019-08-07
 - Added security enhancements.
 
