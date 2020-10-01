@@ -65,6 +65,7 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		if ( $this->is_gravityforms_supported() && class_exists( 'GF_Field' ) ) {
 			require_once 'includes/class-gf-field-username.php';
+			add_action( 'parse_request', array( $this, 'redirect_legacy_activation_page' ) );
 		}
 
 		if ( ! wp_next_scheduled ( 'gform_userregistration_cron' ) ) {
@@ -169,17 +170,31 @@ class GF_User_Registration extends GFFeedAddOn {
 	 */
 	public function scripts() {
 
+		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
+
 		$scripts = array(
 			array(
 				'handle'  => 'gform_user_registration_widget_editor',
-				'src'     => $this->get_base_url() . '/js/widget_editor.js',
+				'src'     => $this->get_base_url() . "/js/widget_editor{$min}.js",
 				'version' => $this->_version,
 				'deps'    => array( 'jquery' ),
 				'enqueue' => array(
 					array( $this, 'can_enqueue_widget_editor_script' ),
 					array( 'admin_page' => array( 'customizer' ) ),
 				)
-			)
+			),
+			array(
+				'handle'  => 'gform_user_registration_feed_settings',
+				'src'     => $this->get_base_url() . '/js/feed_settings.js',
+				'version' => $this->_version,
+				'deps'    => array( 'jquery' ),
+				'enqueue' => array(
+					array(
+						'admin_page' => array( 'form_settings' ),
+						'tab'        => $this->_slug,
+					),
+				)
+			),
 		);
 
 		return array_merge( parent::scripts(), $scripts );
@@ -197,19 +212,45 @@ class GF_User_Registration extends GFFeedAddOn {
 	 */
 	public function styles() {
 
+		$min = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG || isset( $_GET['gform_debug'] ) ? '' : '.min';
+
 		$styles = array(
 			array(
 				'handle'  => 'gform_user_registration_widget_editor',
-				'src'     => $this->get_base_url() . '/css/widget_editor.css',
+				'src'     => $this->get_base_url() . "/css/widget_editor{$min}.css",
 				'version' => $this->_version,
 				'enqueue' => array(
 					array( $this, 'can_enqueue_widget_editor_script' ),
 					array( 'admin_page' => array( 'customizer' ) ),
 				)
-			)
+			),
+			array(
+				'handle'  => 'gform_user_registration_feed_settings',
+				'src'     => $this->get_base_url() . '/css/feed_settings.css',
+				'version' => $this->_version,
+				'enqueue' => array(
+					array(
+						'admin_page' => array( 'form_settings' ),
+						'tab'        => $this->_slug,
+					),
+				),
+			),
 		);
 
 		return array_merge( parent::styles(), $styles );
+
+	}
+
+	/**
+	 * Return the plugin's icon for the plugin/form settings menu.
+	 *
+	 * @since 4.5
+	 *
+	 * @return string
+	 */
+	public function get_menu_icon() {
+
+		return file_get_contents( $this->get_base_path() . '/images/menu-icon.svg' );
 
 	}
 
@@ -619,10 +660,7 @@ class GF_User_Registration extends GFFeedAddOn {
 		$password  = rgar( $user_data, 'password' );
 
 		if ( $password ) {
-
-			$encrypted_password = version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFCommon::encrypt( $password ) : GFCommon::openssl_encrypt( $password );
-
-			gform_update_meta( $entry['id'], 'userregistration_password', $encrypted_password );
+			gform_update_meta( $entry['id'], 'userregistration_password', wp_hash_password( $password ) );
 		}
 
 	}
@@ -718,7 +756,20 @@ class GF_User_Registration extends GFFeedAddOn {
 
 	}
 
-	public function create_user( $entry, $form, $feed = false, $password = '' ) {
+	/**
+	 * Create a WordPress user from the given entry and feed.
+	 *
+	 * @since 4.4.3 The `$password_hash` parameter was added.
+	 *
+	 * @param array  $entry         Current entry.
+	 * @param array  $form          Current form.
+	 * @param bool   $feed          Current User Registration feed.
+	 * @param string $password      Deprecated. Specified when creating a user via User Activation.
+	 * @param string $password_hash Optional. Specified when creating a user via User Activation.
+	 *
+	 * @return array|bool
+	 */
+	public function create_user( $entry, $form, $feed = false, $password = '', $password_hash = '' ) {
 
 		$this->log( sprintf( 'Start with form id: %s; entry: %s', $form['id'], print_r( $entry, true ) ) );
 
@@ -733,21 +784,20 @@ class GF_User_Registration extends GFFeedAddOn {
 			$user_data['password'] = $password;
 		}
 
+		if ( ! empty ( $password_hash ) ) {
+			$user_data['password_hash'] = $password_hash;
+		}
+
 		$user_id = $this->user_login_exists( $user_data['user_login'] );
 		if ( $user_id ) {
 			$this->log( sprintf( 'User already exists. User ID: %s', $user_id ) );
 			return false;
 		}
 
-		$generated_password = false;
-		if ( empty( $user_data['password'] ) ) {
-			$user_data['password'] = wp_generate_password();
-			$generated_password = true;
-		}
-
 		$this->log( sprintf( 'Calling wp_create_user() for login "%s" with email "%s".', $user_data['user_login'], $user_data['user_email'] ) );
 
-		$user_id = wp_create_user( $user_data['user_login'], addslashes( $user_data['password'] ), $user_data['user_email'] );
+		$password = $user_data['password'] ? $user_data['password'] : wp_generate_password( 24, false );
+		$user_id  = wp_create_user( $user_data['user_login'], $password, $user_data['user_email'] );
 
 		if ( is_wp_error( $user_id ) ) {
 			$this->log( 'Aborting; wp_create_user() returned an error: ' .  print_r( $user_id, 1 ) );
@@ -755,39 +805,33 @@ class GF_User_Registration extends GFFeedAddOn {
 			return false;
 		}
 
-		if ( $generated_password ) {
-			update_user_option( $user_id, 'default_password_nag', true );
-		}
-
 		$this->add_user_meta( $user_id, $feed, $form, $entry, array() );
 
-		// updating display name (after user meta because of dependency)
-		$user_data['ID']           = $user_id;
-		$user_data['display_name'] = $this->get_display_name( $user_id, $feed );
+		if ( $user_data['password_hash'] ) {
+			$this->log( sprintf( 'Setting hashed password for user ID %d.', $user_id ) );
+			$this->set_hashed_password( $user_id, $user_data['password_hash'] );
+		}
 
-		wp_update_user( $user_data );
+		clean_user_cache( $user_id );
+
+		// Updating display name after user meta because of dependency.
+		$update_args = array(
+			'ID'           => $user_id,
+			'display_name' => $this->get_display_name( $user_id, $feed ),
+		);
 
 		$role = rgar( $meta, 'role' );
 		if ( $role ) {
 			$this->log( sprintf( 'Setting role: %s', $role ) );
-			$user = new WP_User( $user_id );
-			$user->set_role( $role );
+			$update_args['role'] = $role;
 		}
 
-		$this->log( sprintf( 'Calling gf_new_user_notification() for user id: %s', $user_id ) );
+		wp_update_user( $update_args );
 
-		// send notifications
-		if ( rgar( $meta, 'sendEmail' ) ) {
-			gf_new_user_notification( $user_id, $user_data['password'] );
-		} else {
-			// sending a blank password only sends notification to admin
-			gf_new_user_notification( $user_id, '' );
-		}
+		$this->send_wp_new_user_notification( $entry, $form, $feed, $user_id );
 
 		GFAPI::send_notifications( $form, $entry, 'gfur_user_registered' );
 
-		$this->log( 'Done with gf_new_user_notification(). Email with username should have been sent.' );
-		
 		/**
 		 * Determine if entry creator should be associated with newly created user.
 		 *
@@ -812,7 +856,7 @@ class GF_User_Registration extends GFFeedAddOn {
 			$this->attribute_post_author( $user_id, $entry['post_id'] );
 		}
 
-		do_action( 'gform_user_registered', $user_id, $feed, $entry, $user_data['password'] );
+		do_action( 'gform_user_registered', $user_id, $feed, $entry, $password );
 
 		$user_data['user_id'] = $user_id;
 
@@ -876,7 +920,7 @@ class GF_User_Registration extends GFFeedAddOn {
 		}
 
 		// add custom user meta
-		$custom_meta = $this->get_custom_meta( $feed );
+		$custom_meta = $this->get_dynamic_field_map_fields( $feed, 'userMeta' );
 
 		if ( ! is_array( $custom_meta ) || empty( $custom_meta ) ) {
 			return;
@@ -894,7 +938,7 @@ class GF_User_Registration extends GFFeedAddOn {
 
 			$value = $this->get_meta_value( $meta_key, $custom_meta, $form, $entry ); // @review
 
-			$this->log( sprintf( 'Meta item mapped to field: %s; value: %s', $meta_value, $value ) );
+			$this->log( sprintf( 'Meta item mapped to field: %s; value: %s', $meta_value, var_export( $value, true ) ) );
 
 			if ( $value && in_array( $meta_key, array( 'user_url', 'user_nicename' ) ) ) {
 				$result = $this->update_user_property( $user_id, $meta_key, $value );
@@ -908,6 +952,98 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		}
 
+	}
+
+	/**
+	 * Get the type of New User notification that should be sent (if any).
+	 *
+	 * @since 4.4.3
+	 *
+	 * @param $feed
+	 *
+	 * @return string
+	 */
+	public function get_send_email_type( $feed ) {
+
+		// If new meta is set, use it.
+		if ( isset( $feed['meta']['sendEmailEnable'] ) ) {
+			return (bool) $feed['meta']['sendEmailEnable'] ? rgar( $feed['meta'], 'sendEmailValue' ) : '';
+		}
+
+		// If the user hasn't updated their feed since upgrading to GFUR 4.5, they might still have the deprecated
+		// Auto Generate Password option selected. If so, treat it the same as if Email Link is selected.
+		if ( $feed['meta']['password'] === 'generatepass' ) {
+			return 'default';
+		}
+
+		// If not, default to old meta.
+		return rgar( $feed['meta'], 'sendEmail' );
+	}
+
+	/**
+	 * Prepare and send WordPress' New User notification email modified according to the given User Registration feed.
+	 *
+	 * @since 4.4.3
+	 *
+	 * @param array $entry   Current entry.
+	 * @param array $form    Current form.
+	 * @param array $feed    Current User Registration feed.
+	 * @param int   $user_id ID of the user to/for whom the email should be sent.
+	 */
+	public function send_wp_new_user_notification( $entry, $form, $feed, $user_id ) {
+
+		$this->log( sprintf( 'Calling wp_new_user_notification() for user id: %s', $user_id ) );
+
+		$email_type = $this->get_send_email_type( $feed );
+
+		// If Password setting is configured for a field, let's modify the new user notification mesage.
+		if ( is_numeric( rgars( $feed, 'meta/password' ) ) ) {
+			add_filter( 'wp_new_user_notification_email', array( gf_user_registration(), 'modify_wp_new_user_notification_message' ), 10, 2 );
+		}
+
+		// Always send admin email as WordPress does by default. If feed is configured to send user email, email both.
+		wp_new_user_notification( $user_id, null, $email_type && $email_type === 'default' ? 'both' : 'admin' );
+
+		remove_filter( 'wp_new_user_notification_email', array( gf_user_registration(), 'modify_wp_new_user_notification_message' ) );
+
+		$this->log( 'Done with wp_new_user_notification(). Email with username should have been sent.' );
+
+	}
+
+	/**
+	 * Modify WordPress' New User notification message to indicate the user set their password at registration.
+	 *
+	 * @param array    $email Values that will be used to send the email (e.g. subject, message).
+	 * @param \WP_User $user  User object for which the email will be sent.
+	 *
+	 * @return array $email
+	 */
+	public function modify_wp_new_user_notification_message( $email, $user ) {
+
+		$key = wp_generate_password( 20, false );
+
+		$message  = sprintf( __( 'Username: %s' ), $user->user_login ) . "\r\n\r\n";
+		$message .= __( 'Use the password you set at registration to login.', 'gravityformsuserregistration' ) . "\r\n\r\n";
+		$message .= wp_login_url() . "\r\n\r\n";
+		$message .= __( 'Forgot your password? Visit the following address to reset your password:', 'gravityformsuserregistration' ) . "\r\n\r\n";
+		$message .= '<' . network_site_url( "wp-login.php?action=rp&key=$key&login=" . rawurlencode( $user->user_login ), 'login' ) . '>';
+
+		$email['message'] = $message;
+
+		return $email;
+	}
+
+	/**
+	 * Update the given user's password directly in the database.
+	 *
+	 * @param int    $user_id         ID of the user to update.
+	 * @param string $hashed_password Hashed password to be set.
+	 *
+	 * @return false|int
+	 */
+	public function set_hashed_password( $user_id, $hashed_password ) {
+		global $wpdb;
+		return $wpdb->update( $wpdb->users, array( 'user_pass' => $hashed_password ), array( 'ID' => $user_id ), '%s' );
 	}
 
 
@@ -966,7 +1102,7 @@ class GF_User_Registration extends GFFeedAddOn {
 			}
 		}
 
-		$custom_meta = gf_user_registration()->get_custom_meta( $feed );
+		$custom_meta = gf_user_registration()->get_dynamic_field_map_fields( $feed, 'userMeta' );
 		foreach ( $custom_meta as $meta_key => $meta_value ) {
 			if ( $meta_value ) {
 				$field_id                            = $meta_value;
@@ -1178,7 +1314,7 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		// if password provided, store it for update in $user array
 		if ( $user_data['password'] ) {
-			$user['user_pass'] = addslashes( $user_data['password'] );
+			$user['user_pass'] = $user_data['password'];
 		} else {
 			unset( $user['user_pass'] );
 		}
@@ -1214,7 +1350,7 @@ class GF_User_Registration extends GFFeedAddOn {
 			return;
 		}
 
-		$meta = $this->get_custom_meta( $feed );
+		$meta = $this->get_dynamic_field_map_fields( $feed, 'userMeta' );
 		if ( ! empty( $meta ) ) {
 			$this->set_gf_uploaded_files( $meta, $form, false, $user_id );
 		}
@@ -1475,14 +1611,17 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		$user_data = $this->get_user_data( $entry, $form, $feed );
 
-		$encrypted_password = version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFCommon::encrypt( $user_data['password'] ) : GFCommon::openssl_encrypt( $user_data['password'] );
+		if( empty( $user_data['password_hash'] ) && $user_data['password'] ) {
+			$user_data['password_hash'] = wp_hash_password( $user_data['password'] );
+		}
 
 		$meta = array(
-			'lead_id'    => $entry['id'],
-			'entry_id'   => $entry['id'],
-			'user_login' => $user_data['user_login'],
-			'email'      => $user_data['user_email'],
-			'password'   => $encrypted_password,
+			'lead_id'       => $entry['id'],
+			'entry_id'      => $entry['id'],
+			'user_login'    => $user_data['user_login'],
+			'email'         => $user_data['user_email'],
+			'password'      => null,
+			'password_hash' => $user_data['password_hash'],
 		);
 
 		/**
@@ -1517,8 +1656,9 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		} else {
 
-			//If user already exists, do not create pending activation
-			if ( get_user_by( 'email', $user_data['user_email'] ) ) {
+			// If user already exists, do not create pending activation.
+			if ( $this->activation_email_exists( $user_data['user_email'] ) ) {
+				$this->log( sprintf( 'Aborting; User already exists for %s.', $user_data['user_email'] ) );
 				return;
 			}
 
@@ -1559,16 +1699,82 @@ class GF_User_Registration extends GFFeedAddOn {
 
 	}
 
+	/**
+	 * Displays the activation page.
+	 *
+	 * @since unknown
+	 */
 	public function maybe_activate_user() {
 
-		if ( rgget( 'page' ) == 'gf_activation' ) {
+		if ( isset( $_GET[ $this->get_activation_var() ] ) ) {
 			require_once( $this->get_base_path() . '/includes/activate.php' );
 			exit();
 		}
 
 	}
 
+	/**
+	 * Redirects the legacy page=gf_activation URL to current activation page.
+	 *
+	 * @since 4.6
+	 */
+	public function redirect_legacy_activation_page() {
+		if ( rgget( 'page' ) === 'gf_activation' ) {
+			wp_safe_redirect( $this->get_activation_url( rgget( 'key' ) ) );
+			exit();
+		}
+	}
 
+	/**
+	 * Returns the activation URL.
+	 *
+	 * @since 4.6
+	 *
+	 * @param string $key The activation key or an empty string for the activation form to be displayed.
+	 *
+	 * @return string
+	 */
+	public function get_activation_url( $key = '' ) {
+		return add_query_arg( $this->get_activation_var(), $key, home_url( '/' ) );
+	}
+
+	/**
+	 * Returns the string to be used as the query var in the activation URL.
+	 *
+	 * @since 4.6
+	 *
+	 * @return string
+	 */
+	public function get_activation_var() {
+		return 'gfur_activation';
+	}
+
+	/**
+	 * Determines if a user already exists for the supplied email address.
+	 *
+	 * @since 4.6
+	 *
+	 * @param string $email The email address to be checked.
+	 *
+	 * @return bool
+	 */
+	public function activation_email_exists( $email ) {
+		/**
+		 * Allows to the user to disable the check to see if the email is being already used by a previously registered user.
+		 *
+		 * @since 2.4.2
+		 * @since 4.6 Moved from GFUserSignups::activate_signup().
+		 *
+		 * @param bool $check_email Set to false to disable the email checking.
+		 */
+		$check_email = apply_filters( 'gform_user_registration_check_email_pre_signup_activation', true );
+
+		if ( ! $check_email ) {
+			$this->log( 'Email exists check disabled.' );
+		}
+
+		return $check_email && email_exists( $email );
+	}
 
 
 
@@ -2174,7 +2380,7 @@ class GF_User_Registration extends GFFeedAddOn {
 				 * @param object $sign_on        The response from wp_signon.  WP_User object on success.  Error on failure.
 				 */
 				$redirect_url = gf_apply_filters( array( 'gform_user_registration_login_redirect_url' ), rgpost( 'login_redirect' ), $sign_on );
-				wp_redirect( $redirect_url );
+				wp_safe_redirect( $redirect_url );
 
 			}
 
@@ -2305,6 +2511,24 @@ class GF_User_Registration extends GFFeedAddOn {
 	// # PLUGIN SETTINGS -----------------------------------------------------------------------------------------------
 
 	public function plugin_settings_fields() {
+
+		// Prepare Registration Page dependency.
+		if ( version_compare( GFForms::$version, '2.5-dev-1', '<' ) ) {
+			$registration_deps = array(
+				'field'  => 'custom_registration_page_enable',
+				'values' => '1',
+			);
+		} else {
+			$registration_deps = array(
+				'live'   => true,
+				'fields' => array(
+					array(
+						'field' => 'custom_registration_page_enable',
+					),
+				),
+			);
+		}
+
 		return array(
 			array(
 				'title'       => esc_html__( 'Global Settings', 'gravityformsuserregistration' ),
@@ -2314,25 +2538,24 @@ class GF_User_Registration extends GFFeedAddOn {
 						'name'    => 'custom_registration_page_enable',
 						'label'   => esc_html__( 'Custom Registration Page', 'gravityformsuserregistration' ),
 						'type'    => 'checkbox',
-						'choices' => array( array(
-							'label' => esc_html__( 'Enable Custom Registration Page', 'gravityformsuserregistration' ),
-							'name'  => 'custom_registration_page_enable'
-						) ),
+						'choices' => array(
+							array(
+								'label' => esc_html__( 'Enable Custom Registration Page', 'gravityformsuserregistration' ),
+								'name'  => 'custom_registration_page_enable',
+							),
+						),
 						'tooltip' => sprintf( '<h6>%s</h6> %s', esc_html__( 'Custom Registration Page', 'gravityformsuserregistration' ), esc_html__( 'When users attempt to access the default WordPress registration page, they will be redirected to this custom page instead.', 'gravityformsuserregistration' ) ),
-						'onclick' => 'jQuery( "form#gform-settings" ).submit();'
+						'onclick' => version_compare( GFForms::$version, '2.5-dev-1', '<' ) ? 'jQuery( "form#gform-settings" ).submit();' : '',
 					),
 					array(
-						'name'    => 'custom_registration_page',
-						'label'   => esc_html__( 'Registration Page', 'gravityformsuserregistration' ),
-						'type'    => 'select_custom',
-						'choices' => $this->get_pages_as_choices( esc_html__( 'Select a Page', 'gravityformsuserregistration' ) ),
-						'dependency'  => array(
-							'field'   => 'custom_registration_page_enable',
-							'values'  => '1'
-						),
-						'required' => true
-					)
-				)
+						'name'       => 'custom_registration_page',
+						'label'      => esc_html__( 'Registration Page', 'gravityformsuserregistration' ),
+						'type'       => 'select_custom',
+						'choices'    => $this->get_pages_as_choices( esc_html__( 'Select a Page', 'gravityformsuserregistration' ) ),
+						'dependency' => $registration_deps,
+						'required'   => true,
+					),
+				),
 			),
 		);
 	}
@@ -2391,6 +2614,13 @@ class GF_User_Registration extends GFFeedAddOn {
 	public function feed_settings_fields() {
 
 		$is_update_feed = $this->is_update_feed( $this->get_current_feed() ) || $this->get_setting( 'feedType' ) == 'update';
+
+		// Auto Generate Password is no longer supported for the Password setting. Let's default these to the new Set Password via Email Link option.
+		if ( $this->get_setting( 'password' ) === 'generatepass' ) {
+			$settings = $this->get_current_settings();
+			$settings['password'] = 'email_link';
+			$this->set_settings( $settings );
+		}
 
 		$fields = array();
 
@@ -2496,6 +2726,7 @@ class GF_User_Registration extends GFFeedAddOn {
 					),
 					'required'    => ! $is_update_feed,
 					'class'       => 'medium',
+					'no_choices'  => esc_html__( 'You must have at least one Email Address field.', 'gravityformsuserregistration' ),
 					'tooltip'     => sprintf( '<h6>%s</h6> %s', esc_html__( 'Email Address', 'gravityformsuserregistration' ), esc_html__( 'Select the form field that should be used for the user\'s email address.', 'gravityformsuserregistration' ) )
 				),
 				array(
@@ -2508,7 +2739,7 @@ class GF_User_Registration extends GFFeedAddOn {
 						'input_types'          => array( 'password' ),
 						'append_choices'       => $this->get_extra_password_choices()
 					),
-					'tooltip'  => sprintf( '<h6>%s</h6> %s', esc_html__( 'Password', 'gravityformsuserregistration' ), esc_html__( 'Select the form field that should be used for the user\'s password.', 'gravityformsuserregistration' ) )
+					'tooltip'  => sprintf( '<h6>%s</h6> %s', esc_html__( 'Password', 'gravityformsuserregistration' ), esc_html__( 'Select the form field that should be used for the user\'s password or select "Set Password via Email Link" to have a URL emailed to the the user where they can set their password.', 'gravityformsuserregistration' ) ),
 				),
 				array(
 					'name'     => 'role',
@@ -2670,16 +2901,37 @@ class GF_User_Registration extends GFFeedAddOn {
 				array(
 					'name'      => 'sendEmail',
 					'label'     => esc_html__( 'Send Email?', 'gravityformsuserregistration' ),
-					'type'      => 'checkbox',
-					'choices'   => array(
-						array(
-							'label'         => esc_html__( 'Have WordPress send this password to the new user by email.', 'gravityformsuserregistration' ),
-							'value'         => 1,
-							'name'          => 'sendEmail',
-							'default_value' => 1
-						)
+					'type'      => 'send_email',
+					'checkbox'  => array(
+						'label'         => esc_html__( 'Send the new user an email about their account.', 'gravityformsuserregistration' ),
+						'enabledLabel'  => esc_html__( 'Send the new user an email about their account:', 'gravityformsuserregistration' ),
+						'value'         => 1,
+						'default_value' => 1
 					),
-					'tooltip' => sprintf( '<h6>%s</h6> %s', esc_html__( 'Send Email?', 'gravityformsuserregistration' ), sprintf( esc_html__( 'Specify whether WordPress should send the password to the new user by email. %sEnabled by default.%s', 'gravityformsuserregistration' ), '<em class="enabled-by-default">', '</em>' ) ),
+					'select'    => array(
+						'choices' => array(
+							array(
+								'label' => esc_html__( 'by email from WordPress', 'gravityformsuserregistration' ),
+								'value' => 'default'
+							),
+							array(
+								'label' => esc_html__( 'by form notification', 'gravityformsuserregistration' ),
+								'value' => 'manual'
+							)
+						),
+						'tooltip' => sprintf(
+							'<h6>%s</h6> %s',
+							esc_html__( 'Send Email Options', 'gravityformsuserregistration' ),
+							sprintf(
+								esc_html__( '%3$s
+									%1$sBy email from WordPress:%2$s%3$s WordPress will send the user an email with their login and a login URL. If the %1$sPassword%2$s setting is configured to "Set Password via Email Link", WordPress will include a link where the user can set their password.%3$s%3$s
+									%1$sBy form notification:%2$s%3$s Configure a form notification for the desired User Registration event. If the %1$sPassword%2$s setting is configured to "Set Password via Email Link", you must include the %4$s{set_password_url}%5$s merge tag in your notification to provide a URL where the user can set their password.',
+									'gravityformsuserregistration'
+								),
+								'<strong>', '</strong>', '<br>', '<code>', '</code>'
+							) )
+					),
+					'tooltip' => sprintf( '<h6>%s</h6> %s', esc_html__( 'Send Email?', 'gravityformsuserregistration' ), sprintf( esc_html__( 'Specify whether an email (or notification) should be sent to the new user about their account. %sEnabled by default.%s', 'gravityformsuserregistration' ), '<em class="enabled-by-default">', '</em>' ) ),
 					'dependency'  => array(
 						'field'   => 'feedType',
 						'values'  => 'create'
@@ -2690,7 +2942,8 @@ class GF_User_Registration extends GFFeedAddOn {
 					'label'     => esc_html__( 'User Activation', 'gravityformsuserregistration' ),
 					'type'      => 'checkbox_and_select',
 					'checkbox'  => array(
-						'label' => esc_html__( 'Enable user activation.', 'gravityformsuserregistration' )
+						'label'        => esc_html__( 'Enable user activation.', 'gravityformsuserregistration' ),
+						'enabledLabel' => esc_html__( 'Enable user activation:', 'gravityformsuserregistration' ),
 					),
 					'select'    => array(
 						'choices' => array(
@@ -2703,7 +2956,15 @@ class GF_User_Registration extends GFFeedAddOn {
 								'value' => 'manual'
 							)
 						),
-						'tooltip' => sprintf( '<h6>%s</h6> %s', esc_html__( 'User Activation Type', 'gravityformsuserregistration' ), sprintf( esc_html__( '%sBy Email:%s WordPress will send the user an email with an activation link.%s%1$sManually:%2$s Activate each user manually from the Pending Activations page or send a form notification for the User Activation event with an activation link.', 'gravityformsuserregistration' ), '<strong>', '</strong>', '<br />' ) )
+						'tooltip' => sprintf( '<h6>%s</h6> %s',
+							esc_html__( 'User Activation Type', 'gravityformsuserregistration' ),
+							sprintf(
+								esc_html__( '%3$s
+								%1$sBy Email:%2$s%3$sWordPress will send the user an email with an activation link.%3$s%3$s
+								%1$sManually:%2$s%3$sActivate each user manually from the Pending Activations page or send a form notification for the User Activation event with an activation link (via the %4$s{activation_url}%5$s merge tag).', 'gravityformsuserregistration' ),
+								'<strong>', '</strong>', '<br>', '<code>', '</code>'
+							)
+						)
 					),
 					'tooltip'     => sprintf( '<h6>%s</h6> %s', esc_html__( 'User Activation', 'gravityformsuserregistration' ), esc_html__( 'Send users an email with an activation link. Users are only registered once they have activated their accounts.', 'gravityformsuserregistration' ) ),
 					'dependency'  => array(
@@ -2782,6 +3043,122 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		// sections cannot be an associative array
 		return array_values( $fields );
+	}
+
+	/**
+	 * Custom feed setting for the Send Email option.
+	 *
+	 * @param      $field
+	 * @param bool $echo
+	 *
+	 * @return string
+	 */
+	public function settings_send_email( $field, $echo = true ) {
+
+		$html = sprintf( '<div>%s</div>', $this->settings_checkbox_and_select( $field, false ) );
+
+		if ( version_compare( GFForms::$version, '2.5-dev-1', '<' ) ) {
+			$html .= sprintf( '<div id="sendEmailLocked" class="alert_yellow" style="display:none;margin-top: 15px;padding: 15px;">%s</div>',
+				sprintf( esc_html__( 'This setting is locked when %sPassword%s is configured to "Set Password via Email Link".' ), '<strong>', '</strong>' )
+			);
+		} else {
+			$html .= sprintf( '<div id="sendEmailLocked" class="alert warning" style="display:none;">%s</div>',
+				sprintf( esc_html__( 'This setting is locked when %sPassword%s is configured to "Set Password via Email Link".' ), '<strong>', '</strong>' )
+			);
+		}
+
+		if ( $echo ) {
+			echo $html;
+		}
+
+		return $html;
+	}
+
+	/**
+	 * Custom feed setting for a checkbox that when checked reveals a select.
+	 *
+	 * @param array $field
+	 * @param bool  $echo
+	 *
+	 * @return string
+	 */
+	public function settings_checkbox_and_select( $field, $echo = true ) {
+
+		$field = $this->prepare_settings_checkbox_and_select( $field );
+
+		$checkbox_field = $field['checkbox'];
+		$select_field = $field['select'];
+
+		$is_enabled = $this->get_setting( $checkbox_field['name'] );
+
+		$html = sprintf(
+			'%s <span id="%s" style="%s">%s %s</span>',
+			$this->settings_checkbox( $checkbox_field, false ),
+			$select_field['name'] . 'Span',
+			$is_enabled ? '' : 'display:none;',
+			$this->settings_select( $select_field, false ),
+			$this->maybe_get_tooltip( $select_field )
+		);
+
+		if ( $echo ) {
+			echo $html;
+		}
+
+		return $html;
+	}
+
+	/**
+	 * Prepare the individual checkbox and select fields for use in a custom Checkbox Select feed setting.
+	 *
+	 * @param $field
+	 *
+	 * @return mixed
+	 */
+	public function prepare_settings_checkbox_and_select( $field ) {
+
+		// Prepare checkbox.
+		$checkbox_field = wp_parse_args( rgars( $field, 'checkbox' ), array(
+			'type'       => 'checkbox',
+			'name'       => $field['name'] . 'Enable',
+			'label'      => esc_html__( 'Enable', 'gravityforms' ),
+			'horizontal' => true,
+			'value'      => '1',
+			'choices'    => false,
+			'tooltip'    => false,
+			'class'      => '',
+		) );
+
+		if( isset( $checkbox_field['enabledLabel'] ) ) {
+			$checkbox_field['data-enabledLabel'] = $checkbox_field['enabledLabel'];
+			$checkbox_field['data-label'] = $checkbox_field['label'];
+			unset( $checkbox_field['enabledLabel'] );
+		}
+
+		$checkbox_field['class'] .= 'gfur-cs-checkbox';
+
+		if( empty( $checkbox_field['choices'] ) ) {
+			$checkbox_field['choices'] = array(
+				array(
+					'name'  => $checkbox_field['name'],
+					'label' => $checkbox_field['label'],
+				)
+			);
+		}
+
+		// Prepare select.
+		$select_field = wp_parse_args( rgars( $field, 'select' ), array(
+			'name'    => $field['name'] . 'Value',
+			'type'    => 'select',
+			'class'   => '',
+			'tooltip' => false
+		) );
+
+		$select_field['class'] .= ' ' . $field['name'] . 'Value';
+
+		$field['select'] = $select_field;
+		$field['checkbox'] = $checkbox_field;
+
+		return $field;
 	}
 
 	public function get_username_field_for_feed_settings() {
@@ -2972,24 +3349,6 @@ class GF_User_Registration extends GFFeedAddOn {
 		return $props;
 	}
 
-	public function feed_list_title() {
-
-		$title = '';
-
-		if ( $this->is_feed_list_page() ) {
-
-			$title = sprintf( esc_html__( '%s Feeds', 'gravityformsuserregistration' ), $this->get_short_title() );
-			$form  = GFAPI::get_form( rgget( 'id' ) );
-
-			if ( ! $this->has_feed_type( 'update', $form ) ) {
-				$title .= sprintf( ' <a class="add-new-h2" href="%s">%s</a>', add_query_arg( array( 'fid' => '0' ) ), esc_html__( 'Add New', 'gravityformsuserregistration' ) );
-			}
-
-		}
-
-		return $title;
-	}
-
 	public function get_available_feed_actions() {
 
 		// forms can have multiple "create" feeds
@@ -3004,7 +3363,7 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		$feed = $this->get_current_feed();
 
-		if ( $this->has_feed_type( 'create', $form, $feed['id'] ) ) {
+		if ( $this->has_feed_type( 'create', $form, rgar( $feed, 'id' ) ) ) {
 			$actions['update']['disabled'] = true;
 		}
 
@@ -3046,11 +3405,10 @@ class GF_User_Registration extends GFFeedAddOn {
 			);
 		} elseif ( $feed_type == 'create' ) {
 			$choices[] = array(
-				'label' => esc_html__( 'Auto Generate Password', 'gravityformsuserregistration' ),
-				'value' => 'generatepass'
+				'label' => esc_html__( 'Set Password via Email Link', 'gravityformsuserregistration' ),
+				'value' => 'email_link'
 			);
 		}
-
 
 		return $choices;
 	}
@@ -3068,6 +3426,37 @@ class GF_User_Registration extends GFFeedAddOn {
 				'icon'  => 'fa-refresh',
 			)
 		);
+	}
+
+	/**
+	 * Determine if feed can be created.
+	 *
+	 * Note: Many "create" user registration feeds can exist, but only one update feed is allowed at a time. Because
+	 * Gravity Forms calls can_create_feed to check whether a feed can be edited, too, we need to first determine
+	 * whether the current view is the feed edit page. GF 2.5 introduces the `is_feed_edit_page` method, but we include
+	 * its logic here as a fallback to get this to work pre-2.5.
+	 *
+	 * @since 4.5
+	 *
+	 * @return bool
+	 */
+	public function can_create_feed() {
+		// Allow users to edit an existing create or update feed.
+		if (
+			( $this->is_gravityforms_supported( '2.5-beta' ) && $this->is_feed_edit_page() )
+			|| (
+				( $this->is_detail_page() || $this->_multiple_feeds === false )
+				&& rgget( 'subview' ) === $this->get_slug()
+			)
+		) {
+			return true;
+		}
+
+		// Prevent creation of new feeds if an update feed already exists.
+		$form = GFAPI::get_form( rgget( 'id' ) );
+
+		return ! $this->has_feed_type( 'update', $form );
+
 	}
 
 	public function can_duplicate_feed( $feed ) {
@@ -3145,6 +3534,10 @@ class GF_User_Registration extends GFFeedAddOn {
 
 	public function get_roles_as_choices( $include_no_role_option = false ) {
 
+		if ( ! function_exists( 'get_editable_roles' ) ) {
+			require_once( ABSPATH . '/wp-admin/includes/user.php' );
+		}
+
 		$roles   = array_reverse( get_editable_roles() );
 		$choices = array(
 			array(
@@ -3188,6 +3581,22 @@ class GF_User_Registration extends GFFeedAddOn {
 		);
 
 		return $columns;
+	}
+
+	/**
+	 * Overrides the behavior in parent GFFeedAddOn class.
+	 *
+	 * There are no messages we need to display in the feed list outside of the invitation to create a feed. Thus,
+	 * we simply return false here to render the feed list if feeds exist.
+	 *
+	 * @since 4.5.7
+	 *
+	 * @return string|false
+	 */
+	public function feed_list_message() {
+
+		return false;
+
 	}
 
 	public function get_column_value_feedType( $item ) {
@@ -3430,7 +3839,7 @@ class GF_User_Registration extends GFFeedAddOn {
 
 		$user = new WP_User( $user_id );
 
-		return $user->get( 'user_email' ) == $email;
+		return strtolower( $user->get( 'user_email' ) ) == strtolower( $email );
 	}
 
 	public function is_meta_key_mapped( $meta_key, $feed ) {
@@ -3523,21 +3932,27 @@ class GF_User_Registration extends GFFeedAddOn {
 			$user_login = gf_apply_filters( 'gform_user_registration_username', $form['id'], $user_login, $feed, $form, $entry );
 		}
 
-		// password will be stored in entry meta for delayed feeds, check there first
-		if ( $password = gform_get_meta( $entry['id'], 'userregistration_password' ) ) {
-			$password = version_compare( self::get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFCommon::decrypt( $password ) : GFCommon::openssl_decrypt( $password );
+		$password = $this->get_meta_value( 'password', $feed, $form, $entry );
+		if ( empty( $password ) ) {
+			$password = false;
 		} else {
-			$password = $this->get_meta_value( 'password', $feed, $form, $entry );
+			// Slashes were removed by GF during submission.
+			// Adding them back to prevent an invalid password error on login.
+			$password = addslashes( $password );
 		}
+
+		// Password will be stored in entry meta for delayed feeds.
+		$password_hash = gform_get_meta( $entry['id'], 'userregistration_password' );
 
 		if ( empty( $user_login ) || empty( $user_email ) ) {
 			return false;
 		}
 
 		return array(
-			'user_login' => $user_login,
-			'user_email' => $user_email,
-			'password'   => $password
+			'user_login'    => $user_login,
+			'user_email'    => $user_email,
+			'password'      => $password,
+			'password_hash' => $password_hash,
 		);
 	}
 
@@ -3801,8 +4216,18 @@ class GF_User_Registration extends GFFeedAddOn {
 			$signup = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_name} WHERE active=0 AND {$key}=%s", $value ) );
 			if ( $signup != null ) {
 				$diff = current_time( 'timestamp', true ) - mysql2date( 'U', $signup->registered );
+
+				/**
+				 * Allows the expiration period for the pending activation to be overridden.
+				 * 
+				 * @since 4.5
+				 *
+				 * @param int $expiration_time Expiration time in seconds. Defaults to 172800 (2 days).
+				 */
+				$expiration = apply_filters( 'gform_user_registration_pending_activation_expiration', 2 * DAY_IN_SECONDS );
+
 				// If registered more than two days ago, cancel registration and let this signup go through.
-				if ( $diff > 2 * DAY_IN_SECONDS ) {
+				if ( $diff > $expiration ) {
 					$wpdb->delete( $table_name, array( $key => $value ) );
 				} else {
 					return true;
@@ -3892,11 +4317,12 @@ class GF_User_Registration extends GFFeedAddOn {
 			return $events;
 		}
 
-		$events['gfur_site_created']    = __( 'Site is created', 'gravityformsuserregistration' );
-		$events['gfur_user_activation'] = __( 'User is pending activation', 'gravityformsuserregistration' );
-		$events['gfur_user_activated']  = __( 'User is activated', 'gravityformsuserregistration' );
-		$events['gfur_user_registered'] = __( 'User is registered', 'gravityformsuserregistration' );
-		$events['gfur_user_updated']    = __( 'User is updated', 'gravityformsuserregistration' );
+		$events['gfur_site_created']            = __( 'Site is created', 'gravityformsuserregistration' );
+		$events['gfur_user_activation']         = __( 'User is pending activation', 'gravityformsuserregistration' );
+		$events['gfur_user_activated']          = __( 'User is activated', 'gravityformsuserregistration' );
+		$events['gfur_user_registered']         = __( 'User is registered', 'gravityformsuserregistration' );
+		$events['gfur_user_updated']            = __( 'User is updated', 'gravityformsuserregistration' );
+		$events['gfur_user_activation_deleted'] = __( 'User pending activation deleted', 'gravityformsuserregistration' );
 
 		return $events;
 
@@ -3918,6 +4344,7 @@ class GF_User_Registration extends GFFeedAddOn {
 	}
 
 
+
 	// # MERGE TAGS ----------------------------------------------------------------------------------------------------
 
 	/**
@@ -3931,7 +4358,7 @@ class GF_User_Registration extends GFFeedAddOn {
 	 * @return array
 	 */
 	public function add_merge_tags( $form ) {
-		if ( $this->is_form_settings() ) {
+		if ( $this->is_form_settings() && headers_sent() ) {
 			?>
 			<script type="text/javascript">
 				if (window.gform)
@@ -3979,7 +4406,7 @@ class GF_User_Registration extends GFFeedAddOn {
 		$activation_url_merge_tag = '{activation_url}';
 		if ( strpos( $text, $activation_url_merge_tag ) !== false ) {
 			$key = gform_get_meta( $entry['id'], 'activation_key' );
-			$url = empty( $key ) ? '' : add_query_arg( array( 'page' => 'gf_activation', 'key'  => $key ), home_url( '/' ) );
+			$url = empty( $key ) ? '' : $this->get_activation_url( $key );
 
 			$text = str_replace( $activation_url_merge_tag, $url, $text );
 		}
@@ -4300,7 +4727,7 @@ class GF_User_Registration extends GFFeedAddOn {
 
 				if ( empty( $plaintext_pass ) ) {
 					$message .= __( 'To set your password, visit the following address:' ) . "\r\n\r\n";
-					$message .= '<' . $this->get_set_password_url( $user ) . ">\r\n\r\n";
+					$message .= '<' . gf_user_registration()->get_set_password_url( $user ) . ">\r\n\r\n";
 				} else {
 					$message .= sprintf( __( 'Password: %s' ), $plaintext_pass ) . "\r\n\r\n";
 				}
@@ -4318,34 +4745,19 @@ class GF_User_Registration extends GFFeedAddOn {
 	/**
 	 * Retrieve the set password url for the specified user.
 	 *
-	 * Forked from WordPress 4.4.1
-	 *
-	 * @see wp_new_user_notification()
 	 *
 	 * @param WP_User $user The user object.
 	 *
 	 * @since 3.4.4.
+	 * @since 4.6 Updated to use get_password_reset_key().
 	 *
 	 * @return string
 	 */
 	public function get_set_password_url( $user ) {
-		global $wpdb, $wp_hasher;
-
-		// Generate something random for a password reset key.
-		$key = wp_generate_password( 20, false );
-
-		/** This action is documented in wp-login.php */
-		do_action( 'retrieve_password_key', $user->user_login, $key );
-
-		// Hashes the plain-text key.
-		if ( empty( $wp_hasher ) ) {
-			require_once ABSPATH . WPINC . '/class-phpass.php';
-			$wp_hasher = new PasswordHash( 8, true );
+		$key = get_password_reset_key( $user );
+		if ( is_wp_error( $key ) ) {
+			return '';
 		}
-		$hashed = time() . ':' . $wp_hasher->HashPassword( $key );
-
-		// Inserts the hashed key into the database.
-		$wpdb->update( $wpdb->users, array( 'user_activation_key' => $hashed ), array( 'user_login' => $user->user_login ) );
 
 		return network_site_url( "wp-login.php?action=rp&key=$key&login=" . rawurlencode( $user->user_login ), 'login' );
 	}
