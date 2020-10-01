@@ -33,11 +33,14 @@ class GF_Field_Username extends GF_Field_Text {
 					
 					// Prepare username button.
 					$username_button = array(
-						'class'      => 'button',
 						'value'      => $new_button['text'],
-						'data-type'  => $this->type,
-						'onclick'    => "StartAddField('{$this->type}');",
-						'onkeypress' => "StartAddField('{$this->type}');",
+						'class'            => 'button',
+						'data-type'        => $this->type,
+						'onclick'          => "StartAddField('{$this->type}');",
+						'onkeypress'       => "StartAddField('{$this->type}');",
+						'text'             => $this->get_form_editor_field_title(),
+						'data-icon'        => empty( $new_button['icon'] ) ? $this->get_form_editor_field_icon() : $new_button['icon'],
+						'data-description' => empty( $new_button['description'] ) ? $this->get_form_editor_field_description() : $new_button['description'],
 					);
 					
 					// Get index of email button.
@@ -74,17 +77,46 @@ class GF_Field_Username extends GF_Field_Text {
 	public function get_form_editor_field_title() {
 		return esc_attr__( 'Username', 'gravityformsuserregistration' );
 	}
-	
+
+	/**
+	 * Returns the field's form editor description.
+	 *
+	 * @since 4.5
+	 *
+	 * @return string
+	 */
+	public function get_form_editor_field_description() {
+		return esc_attr__( 'Allows users to choose their own username when registering a new account.', 'gravityformsuserregistration' );
+	}
+
+	/**
+	 * Returns the field's form editor icon.
+	 *
+	 * This could be an icon url or a dashicons class.
+	 *
+	 * @since 4.5
+	 *
+	 * @return string
+	 */
+	public function get_form_editor_field_icon() {
+		return gf_user_registration()->get_base_url() . '/images/menu-icon.svg';
+	}
+
 	/**
 	 * Return the button for the form editor.
-	 * 
+	 *
+	 * @sicne unknown
+	 * @since 4.5 Added icon and description to button array.
+	 *
 	 * @access public
 	 * @return array
 	 */
 	public function get_form_editor_button() {
 		return array(
-			'group' => 'advanced_fields',
-			'text'  => $this->get_form_editor_field_title()
+			'group'       => 'advanced_fields',
+			'text'        => $this->get_form_editor_field_title(),
+			'icon'        => $this->get_form_editor_field_icon(),
+			'description' => $this->get_form_editor_field_description(),
 		);
 	}
 

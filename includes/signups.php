@@ -120,7 +120,7 @@ class GFUserSignups {
 			return false;
 		}
 
-		$url = add_query_arg( array( 'page' => 'gf_activation', 'key' => $key ), home_url( '/' ) );
+		$url = gf_user_registration()->get_activation_url( $key );
 
 		// BP replaces URL before passing the message, get the BP activation URL and replace
 		if ( gf_user_registration()->is_bp_active() ) {
@@ -138,7 +138,7 @@ class GFUserSignups {
 			return false;
 		}
 
-		$url = add_query_arg( array( 'page' => 'gf_activation', 'key' => $key ), home_url( '/' ) );
+		$url = gf_user_registration()->get_activation_url( $key );
 
 		// BP replaces URL before passing the message, get the BP activation URL and replace
 		if ( gf_user_registration()->is_bp_active() ) {
@@ -200,18 +200,8 @@ class GFUserSignups {
 			return new WP_Error( 'user_already_exists', __( 'That username is already activated.' ), $signup );
 		}
 
-		/**
-		 * Allows to the user to disable the check to see if the email is being already used by a previously registered user.
-		 *
-		 * @since 2.4.2
-		 *
-		 * @param type bool $check_email Set to false to disable the email checking
-		 */
-
-		$check_email = apply_filters( 'gform_user_registration_check_email_pre_signup_activation', true );
-
-		if ( $check_email && email_exists( $signup->user_email ) ) {
-			//email address already exists, return error message
+		if ( gf_user_registration()->activation_email_exists( $signup->user_email ) ) {
+			// Email address already exists, return error message.
 			return new WP_Error( 'email_already_exists', __( 'Sorry, that email address is already used!' ), $signup );
 		}
 
@@ -221,9 +211,8 @@ class GFUserSignups {
 		}
 
 		gf_user_registration()->log( "Activating signup for username: {$signup->user_login} - entry: {$signup->lead['id']}" );
-		$password = version_compare( gf_user_registration()->get_gravityforms_db_version(), '2.3-dev-1', '<' ) ? GFCommon::decrypt( $signup->meta['password'] ) : GFCommon::openssl_decrypt( $signup->meta['password'] );
 
-		$user_data = gf_user_registration()->create_user( $signup->lead, $signup->form, $signup->config, $password );
+		$user_data = gf_user_registration()->create_user( $signup->lead, $signup->form, $signup->config, '', $signup->meta['password_hash'] );
 		$user_id   = rgar( $user_data, 'user_id' );
 
 		if ( ! $user_id ) {
@@ -244,7 +233,7 @@ class GFUserSignups {
 			}
 		}
 
-		return array( 'user_id' => $user_id, 'password' => $user_data['password'], 'blog_id' => $blog_id );
+		return array( 'user_id' => $user_id, 'password' => $user_data['password'], 'password_hash' => $user_data['password_hash'], 'blog_id' => $blog_id );
 	}
 
 	public static function delete_signup( $key ) {
@@ -256,7 +245,13 @@ class GFUserSignups {
 
 		do_action( 'gform_userregistration_delete_signup', $signup );
 
-		return $signup->delete();
+		$result = $signup->delete();
+
+		if ( $result ) {
+			GFAPI::send_notifications( $signup->form, $signup->lead, 'gfur_user_activation_deleted' );
+		}
+
+		return $result;
 	}
 
 }

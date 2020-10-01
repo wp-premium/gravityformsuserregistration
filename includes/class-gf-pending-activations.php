@@ -62,7 +62,7 @@ class GF_Pending_Activations {
 			GFUserSignups::prep_signups_functionality();
 		}
 
-		$sql = "SELECT signup_id, meta FROM {$wpdb->prefix}signups 
+		$sql = "SELECT signup_id, meta FROM {$wpdb->signups} 
 				WHERE registered < SUBDATE( CURDATE(), INTERVAL 7 DAY ) 
 				AND meta LIKE '%s:8:\"password\";%'
 				AND meta NOT LIKE '%s:8:\"password\";s:0:\"\";%'
@@ -89,7 +89,12 @@ class GF_Pending_Activations {
 
 	public function add_form_settings_menu( $tabs, $form_id ) {
 		if ( gf_user_registration()->has_feed_type( 'create', array( 'id' => $form_id ) ) ) {
-			$tabs[] = array( 'name' => $this->_slug, 'label' => __( $this->_title, 'gravityformsuserregistration' ), 'capabilities' => 'gravityforms_user_registration' );
+			$tabs[] = array(
+				'name'         => $this->_slug,
+				'label'        => __( $this->_title, 'gravityformsuserregistration' ),
+				'icon'         => file_get_contents( gf_user_registration()->get_base_path() . '/images/pending-menu-icon.svg' ),
+				'capabilities' => 'gravityforms_user_registration',
+			);
 		}
 
 		return $tabs;
@@ -103,9 +108,16 @@ class GF_Pending_Activations {
 
 		GFFormSettings::page_header( __( $this->_title, 'gravityformsuserregistration' ) );
 
+		if ( rgpost( 'is_submit' ) ) {
+			self::handle_submission();
+			GFCommon::display_admin_message();
+		}
+
+		// Prepare panel class.
+		$panel_class = gf_user_registration()->is_gravityforms_supported( '2.5-dev-1' ) ? 'gform-settings-panel' : 'gform_panel gform_panel_form_settings';
 		?>
 
-		<div class="gform_panel gform_panel_form_settings" id="form_settings">
+		<div class="<?php echo $panel_class; ?>" id="form_settings">
 
 			<?php $this->get_page_content(); ?>
 
@@ -119,7 +131,70 @@ class GF_Pending_Activations {
 		return rgempty( 'id', $_GET ) ? false : GFFormsModel::get_form_meta( rgget( 'id' ) );
 	}
 
+	/*
+	 * Displays Pending Activations list.
+	 *
+	 * @since Unknown
+	 */
 	public static function get_page_content() {
+
+		if ( ! gf_user_registration()->is_gravityforms_supported( '2.5-dev-1' ) ) {
+			return self::get_legacy_page_content();
+		}
+
+		require_once( gf_user_registration()->get_base_path() . '/includes/class-gf-pending-activations-list.php' );
+
+		$form      = rgget( 'id' ) ? GFAPI::get_form( rgget( 'id' ) ) : false;
+		$is_global = ! $form;
+
+		?>
+
+		<style type="text/css">
+			.nav-tab-wrapper { margin: 0 0 10px !important; }
+			.fixed .column-date { white-space: nowrap; width: auto; }
+		</style>
+
+		<?php
+		printf( '<header class="gform-settings-panel__header"><h4 class="gform-settings-panel__title"><span>%s</span></h4></header>', __( 'Pending Activations', 'gravityformsuserregistration' ) );
+		?>
+
+		<div class="gform-settings-panel__content">
+			<form id="list_form" method="post" action="">
+
+				<?php
+				$table = new GF_Pending_Activations_List();
+				$table->prepare_items();
+				$table->display();
+				?>
+
+				<input type="hidden" name="is_submit" value="1" />
+				<input type="hidden" id="single_action" name="single_action" value="" />
+				<input type="hidden" id="item" name="item" value="" />
+
+				<?php wp_nonce_field('action', 'action_nonce'); ?>
+
+			</form>
+		</div>
+
+		<script type="text/javascript">
+
+			function singleItemAction(action, activationKey) {
+				jQuery('#item').val(activationKey);
+				jQuery('#single_action').val(action);
+				jQuery('#list_form')[0].submit();
+			}
+
+		</script>
+
+		<?php
+	}
+
+	/*
+	 * Displays Pending Activations list for Gravity Forms <2.5.
+	 *
+	 * @since 4.5
+	 */
+	public static function get_legacy_page_content() {
 
 		require_once( gf_user_registration()->get_base_path() . '/includes/class-gf-pending-activations-list.php' );
 

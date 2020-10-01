@@ -1,3 +1,32 @@
+### 4.6 | 2020-09-30
+- Added translations for Japanese.
+- Added support for Gravity Forms 2.5.
+- Updated the activation page query string to use the "gfur_activation" parameter instead of "page" to fix an issue with WordPress 5.5 where a 404 not found error occurs. Existing activation links will automatically redirect to the new page.
+- Fixed an issue where the password can fail validation on login if the user object is cached when the user is created and feed processing is delayed by the user activation feature or a payment add-on such as PayPal Standard.
+- Fixed an issue where the set password URL included in the notification sent on the user is activated event becomes invalid when the user is activated via the front-end activation page.
+- Fixed a validation error which occurs when using the update type feed and the submitted email address uses a different case to the users current email.
+- Fixed an issue that prevents the dropdown to select notification type in the "Send Email?" setting of a create user feed from displaying in certain situations.
+- Fixed an issue during user update for passwords containing quotes which results in a password validation error on login.
+- Fixed an issue during user creation for passwords containing quotes which results in a password validation error on login.
+- Fixed an issue where feed processing aborts early when the activation feature is enabled and the [gform_user_registration_validation](https://docs.gravityforms.com/gform_user_registration_validation/) and [gform_user_registration_check_email_pre_signup_activation](https://docs.gravityforms.com/gform_user_registration_check_email_pre_signup_activation/) filters are being used to allow multiple accounts to use the same email address.
+
+
+### 4.5 | 2020-05-14
+- Added security enhancements.
+- Added translations for Hebrew, Hindi, and Turkish.
+- Added *[gform_user_registration_pending_activation_expiration](https://docs.gravityforms.com/gform_user_registration_pending_activation_expiration/)* filter that allows the expiration period for the pending activation users to be overridden.
+- Added support for sending notifications when the pending activation is deleted.
+- Updated the settings on the feed configuration page. See [Creating a Feed for the User Registration Add-On](https://docs.gravityforms.com/creating-feed-user-registration-add/) for the available settings.
+- Updated the new user emails to be sent by [wp_new_user_notification()](https://developer.wordpress.org/reference/functions/wp_new_user_notification/) instead of gf_new_user_notification().
+- Updated the default activation page template.
+- Updated Javascript files, stylesheets to use minified versions.
+- Fixed an issue introduced in v4.4.6 where WordPress does not send the new user email for new feeds.
+- Fixed a database error on multisite installations related to the WordPress signups table.
+- Fixed a notice with PHP 7.4 when creating a new feed.
+- Fixed a PHP notice being displayed when a custom meta value is not a string.
+- Fixed a PHP compatibility warning in PHP 7.1+ when getting the set password URL due to using $this within a plain function.
+
+
 ### 4.4 | 2019-09-25
 - Added support for Stripe Checkout to display the "User Registration Options" section in the feed.
 - Fixed an issue where a site cannot be updated when the subscription is canceled on a multisite install.
